@@ -20,6 +20,7 @@
 # RStudio files
 .Rproj.user
 .Rproj.user/
+GeoDiff.Rproj
 
 # produced vignettes
 vignettes/*.html
