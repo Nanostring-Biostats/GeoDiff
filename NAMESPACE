@@ -1,0 +1,32 @@
+useDynLib(GeoDiff, .registration=TRUE)
+importFrom(Rcpp, evalCpp)
+importFrom(magrittr,"%>%")
+
+import(Biobase)
+import(testthat)
+importFrom(NanoStringNCTools, esBy)
+importFrom(Matrix, bdiag)
+importFrom(lme4, lFormula)
+importFrom(robust, covRob)
+importFrom(graphics, boxplot)
+importFrom(graphics, abline)
+importFrom(withr, local_tempdir)
+importFrom(withr, local_dir)
+
+
+exportMethods(aggreprobe)
+exportMethods(fitPoisBG)
+exportMethods(diagPoisBG)
+exportMethods(QuanRange)
+exportMethods(BGScoreTest)
+exportMethods(fitNBth)
+exportMethods(fitPoisthNorm)
+exportMethods(fitNBthDE)
+exportMethods(coefNBth)
+exportMethods(contrastNBth)
+exportMethods(DENBth)
+exportMethods(fitNBthmDE)
+
+importFrom("stats", "cor", "cov", "dnbinom", "dpois", "mad", "median",
+           "model.matrix", "na.omit", "optim", "p.adjust", "pnorm",
+           "ppois", "quantile", "rpois", "setNames", "var")
