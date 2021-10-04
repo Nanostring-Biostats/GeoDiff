@@ -37,8 +37,16 @@ stopifnot(identical(rownames(fData(kidney)), rownames(exprs(kidney))))
 rownames(fData(kidney))[which(!fData(kidney)$Negative)] <- fData(kidney)[which(!fData(kidney)$Negative), "TargetName"]
 featureNames(kidney) <- rownames(fData(kidney))
 rownames(exprs(kidney)) <- rownames(fData(kidney))
-# kidney <- kidney[, kidney$`slide name` %in% c("disease1B", "disease2B")]
 ```
+
+
+In order to make the vignette complete running in a reasonable amount of time, we subset the data. 
+```{r}
+kidney <- kidney[, which(kidney$`slide name` %in% c("disease3", "normal3"))][, c(1:4, 48:51, 60:63, 115:118)]
+table(kidney$region, kidney$`slide name`)
+table(kidney$`slide name`, kidney$class)
+```
+
 
 ## Poisson Background model for negative probes
 
@@ -344,6 +352,7 @@ pData(kidney)$region <- factor(pData(kidney)$region, levels=c("glomerulus", "tub
 
 table(pData(kidney)[, c("region", "slide name")])
 
+features_high_subset <- features_high[1:30]
 ```
 
 Random intercept model only for high genes as an example, takes about 1 hour. Users can apply this function to the whole gene set but it takes even longer.
@@ -354,7 +363,7 @@ NBthmDEmod2 <- fitNBthmDE(object = kidney,
                           form = ~ region+(1|`slide name`), 
                           ROIs_high = ROIs_high, 
                           split = FALSE,
-                          features_all = features_high[1:5], 
+                          features_all = features_high_subset, 
                           sizefact = kidney[, ROIs_high][['sizefact_fitNBth']],
                           sizefact_BG=kidney[, ROIs_high][['sizefact']],
                           preci1=NBthDEmod2$preci1, 
@@ -365,12 +374,6 @@ NBthmDEmod2 <- fitNBthmDE(object = kidney,
                           controlRandom=list(nu=12, nmh_e=400, thin_e=60))
 ```
 
-Or 
-
-```{r}
-#usethis::use_data(NBthmDEmod2, overwrite = TRUE)
-data(NBthmDEmod2)
-```
 
 
 
@@ -384,7 +387,7 @@ NBthmDEmod2slope <- fitNBthmDE(object = kidney,
                                form = ~ region+(1+region|`slide name`), 
                                split = FALSE,
                                ROIs_high = ROIs_high, 
-                               features_all = features_high[1:5], 
+                               features_all = features_high_subset, 
                                sizefact = kidney[, ROIs_high][['sizefact_fitNBth']],
                                sizefact_BG=kidney[, ROIs_high][['sizefact']],
                                preci1=NBthDEmod2$preci1, 
@@ -394,13 +397,6 @@ NBthmDEmod2slope <- fitNBthmDE(object = kidney,
                                sizescale = TRUE, 
                                controlRandom=list(nu=12, nmh_e=400, thin_e=60))
 
-```
-
-or 
-
-```{r}
-#usethis::use_data(NBthmDEmod2slope, overwrite = TRUE)
-data(NBthmDEmod2slope)
 ```
 
 
@@ -420,7 +416,7 @@ Genes with larger difference in estimates between fixed effect model and random 
 
 
 ```{r}
-diff_high <- names(which(abs(NBthDEmod2$para[2,names(NBthmDEmod2slope$para[2,])]-NBthmDEmod2slope$para[2,])>2))
+diff_high <- names(which(abs(NBthDEmod2$para[2,names(NBthmDEmod2slope$para[2,])]-NBthmDEmod2slope$para[2,])>1.5))
 diff_high
 set.seed(123)
 
@@ -434,24 +430,24 @@ NBthmDEmod2slope$theta[3, diff_high]
 
 ```{r}
 annot <- pData(kidney)
-annot$PTPRB <- posdat["PTPRB",]
-annot$F2R <- posdat["F2R",]
+annot$KIRREL1 <- posdat["KIRREL1",]
+annot$KIRREL1 <- posdat["KIRREL1",]
 
 ```
 
 ```{r}
-NBthDEmod2$para[2,"PTPRB"]
-NBthmDEmod2$para[2,"PTPRB"]
-NBthmDEmod2slope$para[2,"PTPRB"]
+NBthDEmod2$para[2,"KIRREL1"]
+NBthmDEmod2$para[2,"KIRREL1"]
+NBthmDEmod2slope$para[2,"KIRREL1"]
 ```
 
 The figure below shows there are huge variation in the difference between two levels of region within each slide.
 
 ```{r}
 
-NBthmDEmod2slope$theta[,"PTPRB"]
-plot_dat <- annot[,c("region", "PTPRB", "slide name")]
-p <- ggplot(plot_dat, aes(x=`slide name`, y=PTPRB, fill=region)) + 
+NBthmDEmod2slope$theta[,"KIRREL1"]
+plot_dat <- annot[,c("region", "KIRREL1", "slide name")]
+p <- ggplot(plot_dat, aes(x=`slide name`, y=KIRREL1, fill=region)) + 
   geom_boxplot()
 
 plot(p)
@@ -512,11 +508,11 @@ plot(sc1_scores, DEtab$adjp, xlim=c(min(sc1_scores),100))
 plot(sc1_scores, DEtabhighpen$pvalue, xlim=c(min(sc1_scores),100))
 plot(sc1_scores, DEtabhighpen$adjp, xlim=c(min(sc1_scores),100))
 
-plot(sc1_scores[features_high], DEtabr$pvalue, xlim=c(min(sc1_scores),100))
-plot(sc1_scores[features_high], DEtabr$adjp, xlim=c(min(sc1_scores),100))
+plot(sc1_scores[features_high_subset], DEtabr$pvalue, xlim=c(min(sc1_scores),100))
+plot(sc1_scores[features_high_subset], DEtabr$adjp, xlim=c(min(sc1_scores),100))
 
-plot(sc1_scores[features_high], DEtabrslope$pvalue, xlim=c(min(sc1_scores),100))
-plot(sc1_scores[features_high], DEtabrslope$adjp, xlim=c(min(sc1_scores),100))
+plot(sc1_scores[features_high_subset], DEtabrslope$pvalue, xlim=c(min(sc1_scores),100))
+plot(sc1_scores[features_high_subset], DEtabrslope$adjp, xlim=c(min(sc1_scores),100))
 
 ```
 
@@ -528,9 +524,9 @@ Relation between p values from different models. The random slope model less sig
 plot(log10(DEtab[,"pvalue"]), log10(DEtabhighpen[,"pvalue"]), xlim=c(-100,0), ylim=c(-100,0))
 abline(a=0,b=1)
 
-plot(log10(DEtab[features_high,"pvalue"]), log10(DEtabr[,"pvalue"]), xlim=c(-100,0), ylim=c(-100,0))
+plot(log10(DEtab[features_high_subset,"pvalue"]), log10(DEtabr[,"pvalue"]), xlim=c(-100,0), ylim=c(-100,0))
 
-plot(log10(DEtab[features_high,"pvalue"]), log10(DEtabrslope[,"pvalue"]),xlim=c(-100,0), ylim=c(-100,0))
+plot(log10(DEtab[features_high_subset,"pvalue"]), log10(DEtabrslope[,"pvalue"]),xlim=c(-100,0), ylim=c(-100,0))
 
 
 plot(log10(DEtabr[,"pvalue"]), log10(DEtabrslope[,"pvalue"]),xlim=c(-100,0), ylim=c(-100,0))
@@ -626,43 +622,8 @@ kidney <- fitPoisthNorm(
 
 ```
 
-Correlation between two different normalization
-
-```{r}
-corvec1 <- apply(cbind(
-  assayDataElement(kidney, "normmat")[features_high, ROIs_high],
-  assayDataElement(kidney, "normmat_sp")[features_high, ROIs_high]
-), 1, function(x) cor(x[1:N], x[(N+1):(2*N)]))
-```
 
 
-
-Based on the figure below we say that the score test cutoff of p<0.01 or p<0.001 are quite reasonable where most genes are stably normalized, even for those genes their signal strength is still quite low, average is about -2.
-
-
-```{r}
-sc1_scores <- fData(kidney)[, "scores"]
-names(sc1_scores) <- featureNames(kidney)
-sc1_pvalues <- fData(kidney)[, "pvalues"]
-names(sc1_pvalues) <- featureNames(kidney)
-
-plot(sc1_scores[features_high], corvec1, xlim = c(-40, 100), ylim = c(-1, 1))
-abline(v = min(sc1_scores[which(sc1_pvalues < 0.01)]))
-abline(v = min(sc1_scores[which(sc1_pvalues < 0.001)]))
-lines(lowess(corvec1 ~ sc1_scores[features_high], delta = 2), col = 2, lty = 2)
-#
-# plot(sc1$scores, norm_mod$hes_det1, xlim=c(-50,200))
-```
-
-
-```{r}
-plot(sc1_scores[features_all], rowMeans(assayDataElement(kidney, "normmat")[features_all, ROIs_high]), xlim = c(-40, 100), ylim = c(-10, 20))
-abline(v = min(sc1_scores[which(sc1_pvalues < 0.01)]))
-abline(v = min(sc1_scores[which(sc1_pvalues < 0.001)]))
-plot(sc1_scores[features_all], rowMeans(assayDataElement(kidney, "normmat_sp")[features_all, ROIs_high]), xlim = c(-40, 100), ylim = c(-10, 20))
-abline(v = min(sc1_scores[which(sc1_pvalues < 0.01)]))
-abline(v = min(sc1_scores[which(sc1_pvalues < 0.001)]))
-```
 
 
 Compared to background subtraction and Q75 normalization
@@ -780,34 +741,7 @@ ggplot(dat_plot, aes(x = value)) +
 
 
 
-```{r}
-corvec2 <- apply(rbind(t(norm_dat_backqu75[features_all, ]), 
-                       t(assayDataElement(kidney[features_all, ROIs_high],"normmat_sp"))), 2, 
-                 function(x) cor(x[1:N], x[(N + 1):(N * 2)]))
 
-corvec3 <- apply(rbind(t(norm_dat_backqu75[features_high, ]), 
-                       t(assayDataElement(kidney[features_high, ROIs_high],"normmat0_sp"))), 2, 
-                 function(x) cor(x[1:N], x[(N + 1):(N * 2)]))
-```
-
-
-
-
-```{r}
-plot(sc1_scores[features_all], corvec2, xlim = c(-40, 500), ylim = c(-1, 1))
-abline(v = min(sc1_scores[which(sc1_pvalues < 0.01)]))
-abline(v = min(sc1_scores[which(sc1_pvalues < 0.001)]))
-lines(lowess(corvec2 ~ sc1_scores[features_all], delta = 2), col = 2, lty = 2)
-
-#
-# plot(sc1_scores, norm_mod$hes_det1, xlim=c(-50,200))
-
-
-plot(sc1_scores[features_high], corvec3, xlim = c(-40, 500), ylim = c(-1, 1))
-abline(v = min(sc1_scores[which(sc1_pvalues < 0.01)]))
-abline(v = min(sc1_scores[which(sc1_pvalues < 0.001)]))
-lines(lowess(corvec3 ~ sc1_scores[features_high], delta = 2), col = 2, lty = 2)
-```
 ```{r}
 dat <- t(norm_dat_backqu75[features_high, ])
 dat_pca <- prcomp(dat, center = TRUE, scale. = TRUE)
