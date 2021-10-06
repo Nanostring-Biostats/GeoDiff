@@ -20,7 +20,6 @@ fitNBthmDE(object, ...)
   preci1,
   threshold_mean,
   preci2,
-  seed,
   sizescalebythreshold = FALSE,
   controlRandom = list()
 )
@@ -36,7 +35,6 @@ fitNBthmDE(object, ...)
   preci1,
   threshold_mean,
   preci2,
-  seed,
   sizescalebythreshold = TRUE,
   controlRandom = list()
 )
@@ -63,8 +61,6 @@ fitNBthmDE(object, ...)
 \item{threshold_mean}{average background level}
 
 \item{preci2}{precision for the background}
-
-\item{seed}{random number generator seed}
 
 \item{sizescalebythreshold}{whether to scale the size factor, default=TRUE}
 
@@ -171,6 +167,7 @@ NBthDEmod2 <- fitNBthDE(form = ~group,
                      preci1con=1/25,
                      sizescalebythreshold=TRUE)
 
+set.seed(123)
 NBthmDEmod1 <- fitNBthmDE(
     form = ~ group + (1 | `slide name`),
     split = FALSE,
@@ -182,7 +179,6 @@ NBthmDEmod1 <- fitNBthmDE(
     preci1=NBthDEmod2$preci1,
     threshold_mean = thmean,
     preci2=10000,
-    seed=123,
     sizescale = TRUE,
     controlRandom=list(nu=12, nmh_e=400, thin_e=60))
 

@@ -812,3 +812,8 @@ p <- ggplot(data = dat, aes(x = PC1, y = PC2)) +
 plot(p)
 ```
 
+
+```{r}
+sessionInfo()
+```
+

@@ -64,5 +64,5 @@ test_that("coefNBth produces desired results from output of fitNBthmDE", {
 
   ## 2. when fullpara=FALSE, the output parameters should be regression coefficients only in a list
 
-  expect_true(all(colnames(NBthDEmod2$X) == rownames(coefmreg$estimate)))
+  expect_true(all(colnames(NBthmDEmod2$X) == rownames(coefmreg$estimate)))
 })

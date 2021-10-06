@@ -16,9 +16,9 @@ test_that("DENBth produces desired results from output of fitNBthDE and coefNBth
 
 
 
-  DEtab1 <- DENBth(coeffull, variable = "regiontubule")
-  DEtab2 <- DENBth(coeffull, variable = "regiontubule", NAto1=FALSE)
-  DEtab3 <- DENBth(coeffull, variable = "regiontubule", padj=FALSE)
+  DEtab1 <- DENBth(coeffull, variable = "group")
+  DEtab2 <- DENBth(coeffull, variable = "group", NAto1=FALSE)
+  DEtab3 <- DENBth(coeffull, variable = "group", padj=FALSE)
   ## 1. In the output data.frame, the DE table should not have NA if NAto1=TRUE
   if(sum(is.na(DEtab2$pvalue))>0)
     expect_equal(DEtab1$pvalue[is.na(DEtab2$pvalue)],rep(1, sum(is.na(DEtab2$pvalue))))

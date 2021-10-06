@@ -94,7 +94,7 @@ test_that("fitNBthmDE produces desired results, CTA", {
   expect_true(all(features_all[1:5] == colnames(NBthmDEmod1$para)))
 
   # and parameters(regression coefficients, threshold, r) in the rows.
-  expect_true(all(c("(Intercept)", "group", "r", "threshold") %in% rownames(NBthmDEmod1$para)))
+  expect_true(all(c("(Intercept)", "regiontubule", "r", "threshold") %in% rownames(NBthmDEmod1$para)))
 
   # Both threshold and r are positive.
   expect_true(all(NBthmDEmod1$para["threshold",] > 0))
@@ -124,7 +124,7 @@ test_that("fitNBthmDE produces desired results, CTA", {
   expect_true(all(features_all[1:5] == colnames(NBthmDEmod1slope$para)))
 
   # and parameters(regression coefficients, threshold, r) in the rows.
-  expect_true(all(c("(Intercept)", "group", "r", "threshold") %in% rownames(NBthmDEmod1slope$para)))
+  expect_true(all(c("(Intercept)", "regiontubule", "r", "threshold") %in% rownames(NBthmDEmod1slope$para)))
 
   # Both threshold and r are positive.
   expect_true(all(NBthmDEmod1slope$para["threshold",] > 0))

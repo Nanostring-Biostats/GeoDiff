@@ -12,7 +12,6 @@
 #' @param preci1 precision matrix for regression coefficients
 #' @param threshold_mean average background level
 #' @param preci2 precision for the background
-#' @param seed random number generator seed
 #' @param sizescalebythreshold XXX, default=FALSE
 #' @param controlRandom list of random effect control parameters, default=list()
 #' @param ... additional argument list that might be used
@@ -90,6 +89,7 @@
 #'                      preci1con=1/25,
 #'                      sizescalebythreshold=TRUE)
 #'
+#' set.seed(123)
 #' NBthmDEmod1 <- fitNBthmDE(
 #'     form = ~ group + (1 | `slide name`),
 #'     split = FALSE,
@@ -101,7 +101,6 @@
 #'     preci1=NBthDEmod2$preci1,
 #'     threshold_mean = thmean,
 #'     preci2=10000,
-#'     seed=123,
 #'     sizescale = TRUE,
 #'     controlRandom=list(nu=12, nmh_e=400, thin_e=60))
 #'
@@ -120,7 +119,7 @@ setMethod(
     function(object, form, split, ROIs_high = NULL,
     features_all = NULL, sizefact = NULL, sizefact_BG = NULL,
     preci1, threshold_mean,
-    preci2, seed, sizescalebythreshold = FALSE, controlRandom = list()) {
+    preci2, sizescalebythreshold = FALSE, controlRandom = list()) {
         fDat <- Biobase::fData(object)
         pDat <- Biobase::pData(object)
 
@@ -243,7 +242,6 @@ setMethod(
             preci1 = preci1,
             threshold_mean = threshold_mean,
             preci2 = preci2,
-            seed = seed,
             sizescalebythreshold = sizescalebythreshold,
             controlRandom = controlRandom
         )
@@ -264,7 +262,6 @@ setMethod(
 #' @param preci1 precision matrix for regression coefficients
 #' @param threshold_mean average background level
 #' @param preci2 precision for the background
-#' @param seed random number generator seed
 #' @param sizescalebythreshold whether to scale the size factor, default=TRUE
 #' @param controlRandom list of random effect control parameters
 #'
@@ -297,7 +294,7 @@ setMethod(
     "fitNBthmDE", "matrix",
     function(form, annot, object, probenum = rep(1, NROW(object)),
     features_all, sizefact, sizefact_BG, preci1, threshold_mean,
-    preci2, seed, sizescalebythreshold = TRUE, controlRandom = list()) {
+    preci2, sizescalebythreshold = TRUE, controlRandom = list()) {
         if (is.null(names(probenum))) names(probenum) <- rownames(object)
 
         n_feature <- length(features_all)
@@ -364,7 +361,6 @@ setMethod(
         cluster_size <- sum(rt$Lind == 1)
         temp_size <- nrow(Lambdati) / cluster_size
 
-        set.seed(seed)
         para <- matrix(0, nrow = (ncol(X) + 2), ncol = n_feature)
         theta <- matrix(0, nrow = max(rt$Lind), ncol = n_feature)
         varcov <- theta
