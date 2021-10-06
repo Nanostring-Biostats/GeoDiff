@@ -359,6 +359,7 @@ Random intercept model only for high genes as an example, takes about 1 hour. Us
 
 
 ```{r}
+set.seed(123)
 NBthmDEmod2 <- fitNBthmDE(object = kidney,
                           form = ~ region+(1|`slide name`), 
                           ROIs_high = ROIs_high, 
@@ -369,7 +370,6 @@ NBthmDEmod2 <- fitNBthmDE(object = kidney,
                           preci1=NBthDEmod2$preci1, 
                           threshold_mean = thmean,
                           preci2=10000, 
-                          seed=123,
                           sizescale = TRUE, 
                           controlRandom=list(nu=12, nmh_e=400, thin_e=60))
 ```
@@ -382,7 +382,7 @@ Random slope model(recommended for this study design), takes about 4 hours. User
 Users can call
 
 ```{r}
-
+set.seed(123)
 NBthmDEmod2slope <- fitNBthmDE(object = kidney, 
                                form = ~ region+(1+region|`slide name`), 
                                split = FALSE,
@@ -393,7 +393,6 @@ NBthmDEmod2slope <- fitNBthmDE(object = kidney,
                                preci1=NBthDEmod2$preci1, 
                                threshold_mean = thmean, 
                                preci2=10000, 
-                               seed=123, 
                                sizescale = TRUE, 
                                controlRandom=list(nu=12, nmh_e=400, thin_e=60))
 

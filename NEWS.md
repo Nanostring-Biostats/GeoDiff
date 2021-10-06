@@ -18,3 +18,9 @@ Revisions
 * reduce the file size for NBthDEmod2.rda and kidney.rda
 * update the unit tests
 * change the maintainer 
+
+# GeoDiff 0.99.3
+
+Revisions
+
+* remove seed
