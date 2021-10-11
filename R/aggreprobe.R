@@ -172,10 +172,10 @@ setMethod(
     function(object, probenames, featurenames, negmod, use = c("score", "cor", "both"), corcutoff=0.85, ...) {
         use <- match.arg(use)
 
-        # remove probes with all 0 counts
-        all0probeidx <- which(rowSums(object[probenames,])==0)
-        probenames <- probenames[-all0probeidx]
-        featurenames <- featurenames[-all0probeidx]
+        # Stop when there are probes with all 0 counts
+        if(any(rowSums(object[probenames,])==0))
+            stop("There are all 0 probes in the count matrix, remove them and rerun aggreprobe.")
+
 
         # select rows with probenames
         object <- object[probenames,]
