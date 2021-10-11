@@ -130,6 +130,9 @@ test_that("fitNBth produces desired results, WTA", {
     NSGMS <- kidney[, kidney$`slide name` %in% c("disease1B", "disease2B")]
     NSGMS <- NSGMS[, c(1:5, 11:15)]
     NSGMS <- fitPoisBG(NSGMS, groupvar = "slide name", size_scale = "sum")
+    all0probeidx <- which(rowSums(exprs(NSGMS))==0)
+    NSGMS <- NSGMS[-all0probeidx, ]
+    NSGMS <- aggreprobe(NSGMS, use = "cor")
     # Negative and Non-Negative facets:
     NSGMS_neg <- NSGMS[which(fData(NSGMS)$CodeClass == "Negative"), ]
     NSGMS_pos <- NSGMS[-which(fData(NSGMS)$CodeClass == "Negative"), ]

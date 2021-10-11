@@ -509,6 +509,9 @@ test_that("BGScoreTest for multiple slides produces desired results", {
 test_that("It returns an error without running fitPoisBG.", {
     # Preamble/load example data
     data("kidney")
+    all0probeidx <- which(rowSums(exprs(kidney))==0)
+    kidney <- kidney[-all0probeidx, ]
+    kidney <- aggreprobe(kidney, use = "cor")
     expect_error(
         BGScoreTest(kidney),
         "Please run `fitPoisBG` first"
@@ -535,6 +538,8 @@ test_that("It returns an error without running fitPoisBG.", {
 test_that("It returns an error if split is TRUE but no corresponding fitPoisBG is called previously.", {
     # Preamble/load example data
     data("kidney")
+    all0probeidx <- which(rowSums(exprs(kidney))==0)
+    kidney <- kidney[-all0probeidx, ]
     res <- fitPoisBG(kidney, size_scale = "first")
     expect_error(
         BGScoreTest(res, split = TRUE),
