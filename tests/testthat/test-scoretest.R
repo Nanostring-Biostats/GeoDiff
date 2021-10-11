@@ -540,6 +540,7 @@ test_that("It returns an error if split is TRUE but no corresponding fitPoisBG i
     data("kidney")
     all0probeidx <- which(rowSums(exprs(kidney))==0)
     kidney <- kidney[-all0probeidx, ]
+    kidney <- aggreprobe(kidney, use = "cor")
     res <- fitPoisBG(kidney, size_scale = "first")
     expect_error(
         BGScoreTest(res, split = TRUE),
