@@ -152,7 +152,7 @@ setMethod(
         if ("probenum" %in% fvarLabels(posdat)) {
             probenum <- fData(posdat)[["probenum"]]
         } else {
-            stop("No `probenum` is found. Run `aggreprobe` first."
+            stop("No `probenum` is found. Run `aggreprobe` first.")
         }
         names(probenum) <- rownames(fData(posdat))
 
