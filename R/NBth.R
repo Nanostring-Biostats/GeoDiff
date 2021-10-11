@@ -103,7 +103,7 @@ setMethod(
         fDatNeg <- fDat[which(fDat$CodeClass == "Negative"), ]
 
         # calculate probenum for the dataset
-        if (any(grepl("CTA", toupper(Biobase::annotation(object))))) {
+        if ("probenum" %in% fvarLabels(posdat)) {
             probenum <- fData(posdat)[["probenum"]]
         } else {
             probenum <- rep(1, nrow(posdat))

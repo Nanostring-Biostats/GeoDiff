@@ -44,3 +44,4 @@ vignettes/*.pdf
 *.dll
 *.o
 *.so
+/.vs/slnx.sqlite
