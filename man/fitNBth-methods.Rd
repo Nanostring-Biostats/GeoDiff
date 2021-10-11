@@ -27,7 +27,7 @@ fitNBth(object, ...)
 \S4method{fitNBth}{matrix}(
   object,
   features_high,
-  probenum = rep(1, NROW(object)),
+  probenum,
   sizefact_BG,
   sizefact_start = sizefact_BG,
   size_scale = c("sum", "first"),

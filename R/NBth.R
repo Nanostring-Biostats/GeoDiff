@@ -106,7 +106,7 @@ setMethod(
         if ("probenum" %in% fvarLabels(posdat)) {
             probenum <- fData(posdat)[["probenum"]]
         } else {
-            probenum <- rep(1, nrow(posdat))
+            stop("No `probenum` is found. Run `aggreprobe` first."
         }
         names(probenum) <- rownames(fData(posdat))
 
@@ -273,7 +273,7 @@ setMethod(
 #' @aliases fitNBth,matrix-method
 setMethod(
     "fitNBth", "matrix",
-    function(object, features_high, probenum = rep(1, NROW(object)), sizefact_BG, sizefact_start = sizefact_BG, size_scale = c("sum", "first"), threshold_start, threshold_fix = FALSE, tol = 1e-3, iterations = 5,
+    function(object, features_high, probenum, sizefact_BG, sizefact_start = sizefact_BG, size_scale = c("sum", "first"), threshold_start, threshold_fix = FALSE, tol = 1e-3, iterations = 5,
     start_para = c(threshold_start, 1), lower_sizefact = 0, lower_threshold = threshold_start / 5) {
         size_scale <- match.arg(size_scale)
         sizefact0 <- sizefact <- sizefact_start

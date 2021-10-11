@@ -612,7 +612,7 @@ setMethod(
         if ("probenum" %in% fvarLabels(posdat)) {
             probenum <- fData(posdat)[["probenum"]]
         } else {
-            probenum <- rep(1, nrow(posdat))
+            stop("No `probenum` is found. Run `aggreprobe` first."
         }
         names(probenum) <- rownames(fData(posdat))
 
@@ -652,7 +652,7 @@ setMethod(
 
 setMethod(
     "QuanRange", "matrix",
-    function(object, probenum = rep(1, NROW(object)), BGmod, probs, removeoutlier = FALSE) {
+    function(object, probenum, BGmod, probs, removeoutlier = FALSE) {
         if (NCOL(BGmod$featfact) == 1) {
             if (removeoutlier == TRUE) {
                 boxobj <- graphics::boxplot(BGmod$featfact, plot = FALSE)

@@ -182,7 +182,7 @@ setMethod(
         if ("probenum" %in% fvarLabels(posdat)) {
             probenum <- fData(posdat)[["probenum"]]
         } else {
-            probenum <- rep(1, nrow(posdat))
+            stop("No `probenum` is found. Run `aggreprobe` first."
         }
         names(probenum) <- rownames(fData(posdat))
 
@@ -464,7 +464,7 @@ setMethod(
 
 setMethod(
     "fitPoisthNorm", "matrix",
-    function(object, probenum = rep(1, NROW(object)), features_high, features_all,
+    function(object, probenum, features_high, features_all,
     sizefact_start, sizefact_BG, threshold_mean, preci2, iterations = 2,
     prior_type = c("equal", "contrast"), sizefactrec = TRUE, size_scale = c("sum", "first"),
     sizescalebythreshold = FALSE, covrob = FALSE, preci1con = 1 / 25, cutoff = 15, confac = 1, calhes = FALSE) {
@@ -651,7 +651,7 @@ setGeneric("fitPoisthNorm_sp",
 #' @aliases fitPoisthNorm_sp,matrix-method
 setMethod(
     "fitPoisthNorm_sp", "matrix",
-    function(object, probenum = rep(1, NROW(object)), features_high,
+    function(object, probenum, features_high,
     features_all = colnames(object), sizefact_start, sizefact_BG,
     threshold_mean, preci2, id, iterations = 2, prior_type = c("equal", "contrast"),
     sizefactrec = TRUE, size_scale = c("sum", "first"), sizescalebythreshold = FALSE,

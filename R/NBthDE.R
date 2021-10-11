@@ -152,7 +152,7 @@ setMethod(
         if ("probenum" %in% fvarLabels(posdat)) {
             probenum <- fData(posdat)[["probenum"]]
         } else {
-            probenum <- rep(1, nrow(posdat))
+            stop("No `probenum` is found. Run `aggreprobe` first."
         }
         names(probenum) <- rownames(fData(posdat))
 
@@ -324,7 +324,7 @@ setMethod(
 #' @aliases fitNBthDE,matrix-method
 setMethod(
     "fitNBthDE", "matrix",
-    function(form, annot, object, probenum = rep(1, NROW(object)),
+    function(form, annot, object, probenum,
     features_high, features_all, sizefact_start, sizefact_BG,
     threshold_mean, preci2, lower_threshold = 0.01,
     prior_type = c("equal", "contrast"), sizefactrec = TRUE,

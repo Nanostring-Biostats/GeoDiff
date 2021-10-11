@@ -13,7 +13,7 @@ QuanRange(object, ...)
 
 \S4method{QuanRange}{matrix}(
   object,
-  probenum = rep(1, NROW(object)),
+  probenum,
   BGmod,
   probs,
   removeoutlier = FALSE

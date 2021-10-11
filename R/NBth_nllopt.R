@@ -1,5 +1,5 @@
 
-NBth_paranll <- function(Y, probenum = 1, sizefact, sizefact0, threshold) {
+NBth_paranll <- function(Y, probenum, sizefact, sizefact0, threshold) {
     loglik_ind <- function(x) {
         featfact <- x[1]
         r <- x[2]
@@ -15,7 +15,7 @@ NBth_paranll <- function(Y, probenum = 1, sizefact, sizefact0, threshold) {
     }
 }
 
-NBth_scalenll <- function(Y, probenum = 1, featfactvec, rvec, sizefact0, threshold) {
+NBth_scalenll <- function(Y, probenum, featfactvec, rvec, sizefact0, threshold) {
     loglik_ind <- function(sizefact) {
 
 
@@ -33,7 +33,7 @@ NBth_scalenll <- function(Y, probenum = 1, featfactvec, rvec, sizefact0, thresho
 
 
 
-NBth_thnll <- function(Y, probenum = 1, sizefact, sizefact0, featfactvec, rvec) {
+NBth_thnll <- function(Y, probenum, sizefact, sizefact0, featfactvec, rvec) {
     loglik_ind <- function(threshold) {
 
 
@@ -59,7 +59,7 @@ NBth_thnll <- function(Y, probenum = 1, sizefact, sizefact0, featfactvec, rvec) 
 }
 
 
-NBth_paraopt <- function(countmat, probenum = rep(1, NROW(countmat)), sizefact, sizefact0, threshold, start = c(0.5, 0.5), lower = c(0.01, 0.01)) {
+NBth_paraopt <- function(countmat, probenum, sizefact, sizefact0, threshold, start = c(0.5, 0.5), lower = c(0.01, 0.01)) {
     if (is.null(names(probenum))) probenum <- rownames(countmat)
     para <- sapply(rownames(countmat), function(x) {
         fun1 <- NBth_paranll(countmat[x, ], probenum[x], sizefact, sizefact0, threshold)
