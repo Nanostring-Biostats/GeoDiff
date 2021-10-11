@@ -81,6 +81,14 @@ which(assayDataElement(kidney_diag, "low_outlier") == 1, arr.ind = TRUE)
 which(assayDataElement(kidney_diag, "up_outlier") == 1, arr.ind = TRUE)
 ```
 
+# Aggregate function
+## Remove probes with zero expression and 
+## Run aggreprobe on all objects prior to score test
+```{r}
+all0probeidx <- which(rowSums(exprs(kidney))==0)
+kidney <- kidney[-all0probeidx, ] 
+kidney <- aggreprobe(kidney, use = "cor")
+```
 
 # Score test
 
