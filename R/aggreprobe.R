@@ -169,8 +169,17 @@ setMethod(
 #'
 setMethod(
     "aggreprobe", "matrix",
-    function(object, probenames, featurenames, negmod, use = c("score", "cor", "both"), ...) {
+    function(object, probenames, featurenames, negmod, use = c("score", "cor", "both"), corcutoff=0.85, ...) {
         use <- match.arg(use)
+
+        # Stop when there are probes with all 0 counts
+        if(any(rowSums(object[probenames,])==0))
+            stop("There are all 0 probes in the count matrix, remove them and rerun aggreprobe.")
+
+
+        # select rows with probenames
+        object <- object[probenames,]
+
         probemat_ls <- lapply(split(probenames, featurenames), function(x) object[x, ])
 
         remain <- split(probenames, featurenames)
@@ -193,21 +202,21 @@ setMethod(
             remaincor <- remain[feature_useall]
             remaincortemp <- remain[feature_toagre]
 
-            for (i in seq_len(5)) {
-                mean_cor_ls <- lapply(names(cor_ls), function(x) {
-                    apply(cor_ls[[x]][remaincortemp[[x]], remaincortemp[[x]]], 2, function(z) (sum(z) - 1) / (length(z) - 1))
-                })
-                names(mean_cor_ls) <- names(cor_ls)
-                remaincortemp <- lapply(mean_cor_ls, function(x) {
-                    if (all(x > 0.85)) y <- names(x) else y <- setdiff(names(x), names(which.min(x)))
-                    y
-                })
-                remaincor <- c(remaincor, remaincortemp[names(which(sapply(remaincortemp, length) <= 2))])
-                remaincortemp <- remaincortemp[names(which(sapply(remaincortemp, length) > 2))]
+
+            mean_cor_ls <- lapply(names(cor_ls), function(x) {
+                apply(cor_ls[[x]][remaincortemp[[x]], remaincortemp[[x]]], 2, function(z) (sum(z) - 1) / (length(z) - 1))
+            })
+            names(mean_cor_ls) <- names(cor_ls)
+            remaincortemp <- lapply(mean_cor_ls, function(x) {
+                if (all(x > corcutoff)) y <- names(x) else y <- setdiff(names(x), names(which.min(x)))
+                y
+            })
+            remaincor <- c(remaincor, remaincortemp[names(which(sapply(remaincortemp, length) <= 2))])
+            remaincortemp <- remaincortemp[names(which(sapply(remaincortemp, length) > 2))]
 
 
-                cor_ls <- cor_ls[names(remaincortemp)]
-            }
+            cor_ls <- cor_ls[names(remaincortemp)]
+
 
             remaincor <- c(remaincor, remaincortemp)
         }
