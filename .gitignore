@@ -45,3 +45,5 @@ vignettes/*.pdf
 *.o
 *.so
 /.vs/slnx.sqlite
+*.suo
+/.vs/VSWorkspaceState.json
