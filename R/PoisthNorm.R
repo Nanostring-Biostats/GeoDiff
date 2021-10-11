@@ -79,8 +79,8 @@
 #' sc1_scores <- fData(demo_pos)[, "scores"]
 #' names(sc1_scores) <- fData(demo_pos)[, "TargetName"]
 #' features_high <- ((sc1_scores > quantile(sc1_scores, probs = 0.4)) &
-#'    (sc1_scores < quantile(sc1_scores, probs = 0.95))) %>%
-#'     which() %>%
+#'    (sc1_scores < quantile(sc1_scores, probs = 0.95))) |>
+#'     which() |>
 #'     names()
 #' set.seed(123)
 #' features_high <- sample(features_high, 100)
