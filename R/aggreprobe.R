@@ -155,6 +155,7 @@ setMethod(
 #' @param featurenames vector of names of features each probe corresponding to
 #' @param negmod Poisson Background model object for negative probes
 #' @param use the method to determine outliers including score, cor, and both
+#' @param corcutoff minimum correlation for accepting probe
 #' @param ... additional argument list that might be used
 #'
 #' @return
