@@ -10,6 +10,8 @@
   - The function outputs sample size factors vector in phenoData: sizefact or size_fact_sp if if multiple slides exist
   - The function outputs feature factor vector in featureData: featfact or featfeact_sp_XXX if multiple slides exist (XXX is the slide name)
   - the group variable name for slide id of ROIs in experimentData: fitPoisBG_sp_var if multiple slides exist
+specifications: https://github.com/Nanostring-Biostats/GeoDiff/blob/main/specs.md#specs-for-fitpoisbg
+
 
 #### Reqs for diagPoisBG:
 - The user input object, a GeoMx S4 class
@@ -25,13 +27,16 @@
   - the dispersion parameter in experimentData named disper or disper_sp if multiple is TRUE: disper or disper_sp
   - matrix of outlier indicator (Yes: 1; No: 0) in assayData slot called low_outlier : low_outlier
   - matrix of outlier indicator (Yes: 1; No: 0) in assayData slot called up_outlier : up_outlier
+specifications: https://github.com/Nanostring-Biostats/GeoDiff/blob/main/specs.md#specs-for-diagpoisbg
+
 
 #### Reqs for QuanRange
 - The user input a GeoMx S4 class
 - The user input an indicator variable on whether using results from multiple slides: split
 - The user input vector of probabilities: probs (default FALSE)
 - The function outputs a GeoMx S4 class with column names same as probs:quanrange in phenoData
- 
+specifications: https://github.com/Nanostring-Biostats/GeoDiff/blob/main/specs.md#specs-for-quanrange
+
 
 #### Reqs for BGScoreTest:
 - The user input a GeoMx S4 class
@@ -45,7 +50,8 @@
 - The function outputs a GeoMx S4 class if split is TRUE. 
   - matrix of p values with column dimension equals to slide number in featureData: pvalues_XXX
   - matrix of Background score test statistics with column dimension equals to slide number in featureData: scores_XXX
-  
+specifications: https://github.com/Nanostring-Biostats/GeoDiff/blob/main/specs.md#specs-for-bgscoretest
+
 
 #### Reqs for fitNBth
 - The user input a GeoMx S4 class
@@ -71,8 +77,9 @@
   - features_high in featureData called feature_high_fitNBth, same as the input features_high
   - features_all in experimentData called features_all(=NA)
   - threshold in experimentData called threshold
-  
-  
+specifications: https://github.com/Nanostring-Biostats/GeoDiff/blob/main/specs.md#specs-for-fitnbth
+
+
 #### Reqs for fitPoisthNorm  
 - The user input a GeoMx S4 class
 - The user input an indicator variable on whether using results from multiple slides: split
@@ -117,8 +124,19 @@
   - conv in featureData called conv_sp_XX, vector of convergence for iter=2, 0 converged, 1 not converged, NA if features are not present. 
   - features_high in featureData called features_high_sp, same as the input features_high
   - features_all in featureData called features_all_sp, same as the input features_all
+specifications: https://github.com/Nanostring-Biostats/GeoDiff/blob/main/specs.md#specs-for-fitpoisthnorm
 
-  
+
+#### Reqs for aggreprobe
+- The user input a GeoMx S4 class
+- The user input an indicator variable on whether using results from multiple slides: split
+- The user input the method to determine outliers from score, cor, and both
+- The function outputs a GeoMx S4 class 
+  - the collapsed expression matrix by target in the expression slot 
+  - the collapsed feature data by target in the featureData slot
+  - probenum in featureData, numerical vector of probe numbers of targets
+  - proberemained in featureData, the list of remaining probes of targets
+specifications: https://github.com/Nanostring-Biostats/GeoDiff/blob/main/specs.md#specs-for-aggreprobe
 
 
 #### Reqs for fitNBthDE
@@ -142,7 +160,6 @@
 - The user input preci1con: constant for preci1
 - The user input cutoff: cutoff for calculating the precision matrix for regression coefficients
 - The user input confac: contrast factor in the precision matrix for regression coefficients
-
 - The function outputs a list of following objects
   - design matrix: X = X
   - parameters estimated in iter 1: para0
@@ -156,7 +173,8 @@
   - vector whether model has converged in iter=2: conv, 0=converged, 1=not converged
   - features with high abundance to be run in iter=1: features_high
   - all features need to be run in iter=2: features_all
-  
+specifications: https://github.com/Nanostring-Biostats/GeoDiff/blob/main/specs.md#specs-for-fitnbthde
+
 
 #### Reqs for fitNBthmDE
 
@@ -190,21 +208,10 @@
   - theta, list of estimated random effect parameters(for relative covariance matrix)
   - varcov, list of estimated variance covariance parameter estimation
   - MAP random effect
+specifications: https://github.com/Nanostring-Biostats/GeoDiff/blob/main/specs.md#specs-for-fitnbthmde
 
-#### Reqs for aggreprobe
 
-- The user input a GeoMx S4 class
-- The user input an indicator variable on whether using results from multiple slides: split
-- The user input the method to determine outliers from score, cor, and both
-- The function outputs a GeoMx S4 class 
-  - the collapsed expression matrix by target in the expression slot 
-  - the collapsed feature data by target in the featureData slot
-  - probenum in featureData, numerical vector of probe numbers of targets
-  - proberemained in featureData, the list of remaining probes of targets
-
-  
 #### Reqs for coefNBth
-
 - The user input object: DE model, output by fitNBthDE or fitNBthmDE
 - The user input fullpara: fullpara whether to generate results on all parameters
 - The function outputs a list of following objects
@@ -212,11 +219,10 @@
   - wald_stat, Wald test statistics
   - p_value, p value of Wald test
   - se, standard error
-
+specifications: https://github.com/Nanostring-Biostats/GeoDiff/blob/main/specs.md#specs-for-coefnbth
 
 
 #### Reqs for contrastNBth
-
 - The user input object: DE model, output by fitNBthDE or fitNBthmDE
 - The user input test: statistical test, choose from c("two-sided", ">", "<")
 - The user input method: contrasts methods, only matrix of contrast vector is allowed for now, default=diag(1,ncol(object$X)), i.e. testing the regression coefficients
@@ -226,6 +232,8 @@
   - wald_stat, Wald test statistics
   - p_value, p value of Wald test
   - se, standard error
+specifications: https://github.com/Nanostring-Biostats/GeoDiff/blob/main/specs.md#specs-for-contrastnbth
+
 
 #### Reqs for DENBth
 
@@ -238,4 +246,4 @@
   - log2FC, fold change in log scale
   - pvalue, unadjusted p values
   - adjp, adjusted p values
-
+specifications: https://github.com/Nanostring-Biostats/GeoDiff/blob/main/specs.md#specs-for-denbth
