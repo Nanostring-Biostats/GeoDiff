@@ -86,7 +86,9 @@ which(assayDataElement(kidney_diag, "up_outlier") == 1, arr.ind = TRUE)
 ## Run aggreprobe on all objects prior to score test
 ```{r}
 all0probeidx <- which(rowSums(exprs(kidney))==0)
-kidney <- kidney[-all0probeidx, ] 
+if (length(all0probeidx) > 1) {
+    kidney <- kidney[-all0probeidx, ]
+}
 kidney <- aggreprobe(kidney, use = "cor")
 ```
 
