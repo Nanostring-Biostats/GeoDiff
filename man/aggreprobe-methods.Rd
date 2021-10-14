@@ -17,6 +17,7 @@ aggreprobe(object, ...)
   featurenames,
   negmod,
   use = c("score", "cor", "both"),
+  corcutoff = 0.85,
   ...
 )
 }
