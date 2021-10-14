@@ -19,15 +19,15 @@ fitNBthDE(object, ...)
   sizefact_start = NULL,
   sizefact_BG = NULL,
   threshold_mean = NULL,
-  preci2,
+  preci2 = 10000,
   lower_threshold = 0.01,
-  prior_type = c("equal", "contrast"),
+  prior_type = c("contrast", "equal"),
   sizefactrec = TRUE,
   size_scale = c("sum", "first"),
   sizescalebythreshold = FALSE,
   iterations = 2,
   covrob = FALSE,
-  preci1con,
+  preci1con = 1/25,
   cutoff = 10,
   confac = 1
 )
@@ -42,15 +42,15 @@ fitNBthDE(object, ...)
   sizefact_start,
   sizefact_BG,
   threshold_mean,
-  preci2,
+  preci2 = 10000,
   lower_threshold = 0.01,
-  prior_type = c("equal", "contrast"),
+  prior_type = c("contrast", "equal"),
   sizefactrec = TRUE,
   size_scale = c("sum", "first"),
   sizescalebythreshold = FALSE,
   iterations = 2,
   covrob = FALSE,
-  preci1con,
+  preci1con = 1/25,
   cutoff = 10,
   confac = 1
 )
@@ -76,11 +76,11 @@ fitNBthDE(object, ...)
 
 \item{threshold_mean}{average threshold level}
 
-\item{preci2}{precision for the background}
+\item{preci2}{precision for the background, default=10000}
 
 \item{lower_threshold}{lower limit for the threshold, default=0.01}
 
-\item{prior_type}{empirical bayes prior type, choose from c("equal", "contrast")}
+\item{prior_type}{empirical bayes prior type, choose from c("contrast", "equal")}
 
 \item{sizefactrec}{whether to recalculate sizefact, default=TRUE}
 
@@ -93,7 +93,7 @@ the first iteration apply the model only on features_high and construct the prio
 
 \item{covrob}{whether to use robust covariance in calculating covariance. default=FALSE}
 
-\item{preci1con}{The user input constant term in specifying precision matrix 1}
+\item{preci1con}{The user input constant term in specifying precision matrix 1, default=1/25}
 
 \item{cutoff}{term in calculating precision matrix 1, default=10}
 
