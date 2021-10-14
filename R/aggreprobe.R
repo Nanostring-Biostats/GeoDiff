@@ -39,6 +39,10 @@ setGeneric("aggreprobe",
 setMethod(
     "aggreprobe", "NanoStringGeoMxSet",
     function(object, split, use = c("score", "cor", "both"), ...) {
+        if(featureType(object) == "Target") {
+            stop("GeoMxSet object feature type is already target-level. ",
+                 "No further aggregation can be performed.")
+        }
         object_neg <- object[which(Biobase::fData(object)$CodeClass == "Negative"), ]
         countmat_neg <- Biobase::exprs(object_neg)
         object_nonneg <- object[which(Biobase::fData(object)$CodeClass != "Negative"), ]
