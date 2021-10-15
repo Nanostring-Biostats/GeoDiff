@@ -5,6 +5,7 @@
 #' @param object a valid GeoMx S4 object
 #' @param split indicator variable on whether it is for multiple slides (Yes, TRUE; No, FALSE)
 #' @param use the method to determine outliers including score, cor, and both
+#' @param corcutoff the cutoff value for correlation, default value: 0.85
 #' @param ... additional argument list that might be used
 #'
 #' @return
@@ -38,7 +39,7 @@ setGeneric("aggreprobe",
 #' @aliases aggreprobe,NanoStringGeoMxSet-method
 setMethod(
     "aggreprobe", "NanoStringGeoMxSet",
-    function(object, split, use = c("score", "cor", "both"), ...) {
+    function(object, split, use = c("score", "cor", "both"), corcutoff = 0.85, ...) {
         if(featureType(object) == "Target") {
             stop("GeoMxSet object feature type is already target-level. ",
                  "No further aggregation can be performed.")
@@ -92,6 +93,7 @@ setMethod(
             featurenames = Biobase::fData(object_nonneg)$TargetName,
             negmod = BGmod,
             use = use,
+            corcutoff = corcutoff, 
             ...
         )
 
@@ -159,6 +161,7 @@ setMethod(
 #' @param featurenames vector of names of features each probe corresponding to
 #' @param negmod Poisson Background model object for negative probes
 #' @param use the method to determine outliers including score, cor, and both
+#' @param corcutoff the cutoff value for correlation 
 #' @param ... additional argument list that might be used
 #'
 #' @return
