@@ -33,7 +33,7 @@ fitPoisthNorm(object, ...)
 
 \S4method{fitPoisthNorm}{matrix}(
   object,
-  probenum = rep(1, NROW(object)),
+  probenum,
   features_high,
   features_all,
   sizefact_start,

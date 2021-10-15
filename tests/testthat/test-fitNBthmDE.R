@@ -156,6 +156,9 @@ test_that("fitNBthmDE produces desired results, WTA", {
 
   kidney <- fitPoisBG(kidney, size_scale = "sum")
   kidney <- fitPoisBG(kidney, groupvar = "slide name", size_scale = "sum")
+  all0probeidx <- which(rowSums(exprs(kidney))==0)
+  kidney <- kidney[-all0probeidx, ]
+  kidney <- aggreprobe(kidney, use = "cor")
 
   # Negative Binomial threshold model
   set.seed(123)

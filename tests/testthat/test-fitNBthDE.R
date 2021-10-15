@@ -178,6 +178,9 @@ test_that("fitNBthDE produces desired results, WTA", {
   #kidney <- kidney[, c(1:10, 11:20)]
   kidney <- fitPoisBG(kidney, size_scale = "sum")
   kidney <- fitPoisBG(kidney, groupvar = "slide name", size_scale = "sum")
+  all0probeidx <- which(rowSums(exprs(kidney))==0)
+  kidney <- kidney[-all0probeidx, ]
+  kidney <- aggreprobe(kidney, use = "cor")
   kidney <- BGScoreTest(kidney)
   # Negative and Non-Negative facets:
   kidney_neg <- kidney[which(fData(kidney)$CodeClass == "Negative"), ]

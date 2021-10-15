@@ -179,10 +179,10 @@ setMethod(
         countmat <- Biobase::exprs(posdat)
 
         # calculate probenum for the dataset
-        if (any(grepl("CTA", toupper(Biobase::annotation(object))))) {
+        if ("probenum" %in% fvarLabels(posdat)) {
             probenum <- fData(posdat)[["probenum"]]
         } else {
-            probenum <- rep(1, nrow(posdat))
+            stop("No `probenum` is found. Run `aggreprobe` first.")
         }
         names(probenum) <- rownames(fData(posdat))
 
@@ -651,7 +651,7 @@ setGeneric("fitPoisthNorm_sp",
 #' @aliases fitPoisthNorm_sp,matrix-method
 setMethod(
     "fitPoisthNorm_sp", "matrix",
-    function(object, probenum = rep(1, NROW(object)), features_high,
+    function(object, probenum, features_high,
     features_all = colnames(object), sizefact_start, sizefact_BG,
     threshold_mean, preci2=10000, id, iterations = 2, prior_type = c("equal", "contrast"),
     sizefactrec = TRUE, size_scale = c("sum", "first"), sizescalebythreshold = FALSE,

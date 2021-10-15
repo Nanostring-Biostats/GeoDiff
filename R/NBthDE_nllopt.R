@@ -5,7 +5,7 @@
 
 
 
-NBthDE_scalenll <- function(X, Y, probenum = rep(1, NROW(Y)), regcoefmat, rvec, sizefact0, threshold, sizescale, threshold_mean) {
+NBthDE_scalenll <- function(X, Y, probenum, regcoefmat, rvec, sizefact0, threshold, sizescale, threshold_mean) {
     tmp0 <- 2^(X %*% regcoefmat)
     if (sizescale) {
         loglik_ind <- function(sizefact) {
