@@ -66,14 +66,11 @@ setMethod(
         fDat <- Biobase::fData(object)
 
         # calculate probenum for the dataset
-        if (any(grepl("CTA", toupper(Biobase::annotation(object))))) {
-            if ("probenum" %in% fvarLabels(posdat)) {
-                probenum <- fData(posdat)[["probenum"]]
-            } else {
-                warning("No `probenum` is found. This is only allowed in order to run `aggreprobe` with `use=\"score\"`")
-                probenum <- rep(1, nrow(posdat))
-            }
+        if ("probenum" %in% fvarLabels(posdat)) {
+            probenum <- fData(posdat)[["probenum"]]
         } else {
+            warning("No `probenum` is found. For targets with >1 probe, this ",
+                "is allowed in order to run `aggreprobe` with `use=\"score\"`")
             probenum <- rep(1, nrow(posdat))
         }
         names(probenum) <- rownames(fData(posdat))

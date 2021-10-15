@@ -34,8 +34,8 @@ test_that("fitNBthDE produces desired results, CTA", {
   sc1_scores <- fData(demo_pos)[, "scores"]
   names(sc1_scores) <- fData(demo_pos)[, "TargetName"]
   features_high <- ((sc1_scores > quantile(sc1_scores, probs = 0.4)) &
-     (sc1_scores < quantile(sc1_scores, probs = 0.95))) %>%
-      which() %>%
+     (sc1_scores < quantile(sc1_scores, probs = 0.95))) |>
+      which() |>
       names()
   demoData <- fitNBth(demoData,
                       features_high = features_high,
@@ -90,8 +90,8 @@ test_that("fitNBthDE produces desired results, CTA", {
   ### Case 2:
 
   features_high <- ((sc1_scores > quantile(sc1_scores, probs = 0.4)) &
-                      (sc1_scores < quantile(sc1_scores, probs = 0.95))) %>%
-    which() %>%
+                      (sc1_scores < quantile(sc1_scores, probs = 0.95))) |>
+    which() |>
     names()
 
   NBthDEmod2 <- fitNBthDE(
@@ -178,6 +178,9 @@ test_that("fitNBthDE produces desired results, WTA", {
   #kidney <- kidney[, c(1:10, 11:20)]
   kidney <- fitPoisBG(kidney, size_scale = "sum")
   kidney <- fitPoisBG(kidney, groupvar = "slide name", size_scale = "sum")
+  all0probeidx <- which(rowSums(exprs(kidney))==0)
+  kidney <- kidney[-all0probeidx, ]
+  kidney <- aggreprobe(kidney, use = "cor")
   kidney <- BGScoreTest(kidney)
   # Negative and Non-Negative facets:
   kidney_neg <- kidney[which(fData(kidney)$CodeClass == "Negative"), ]
@@ -187,12 +190,12 @@ test_that("fitNBthDE produces desired results, WTA", {
   # scaling factors
   posdat <- Biobase::exprs(kidney_pos)
   gene_sum <- rowSums(posdat)
-  features_high <- ((gene_sum > quantile(gene_sum, probs = 0.5)) & (gene_sum < quantile(gene_sum, probs = 0.95))) %>%
-    which() %>%
+  features_high <- ((gene_sum > quantile(gene_sum, probs = 0.5)) & (gene_sum < quantile(gene_sum, probs = 0.95))) |>
+    which() |>
     names()
   set.seed(123)
   genes_high <- sample(features_high, 1500) # subset
-  thmean <- 1 * (featfact_sp %>% colMeans() %>% .[1]) # picks the first slide name's value
+  thmean <- 1 * (featfact_sp |> colMeans())[1] # picks the first slide name's value
 
   kidney <- fitNBth(kidney,
                    features_high = genes_high,
@@ -249,8 +252,8 @@ test_that("fitNBthDE produces desired results, WTA", {
 
   ### Case 2:
 
-  features_high <- ((gene_sum > quantile(gene_sum, probs = 0.5)) & (gene_sum < quantile(gene_sum, probs = 0.95))) %>%
-    which() %>%
+  features_high <- ((gene_sum > quantile(gene_sum, probs = 0.5)) & (gene_sum < quantile(gene_sum, probs = 0.95))) |>
+    which() |>
     names()
 
   NBthDEmod2 <- fitNBthDE(

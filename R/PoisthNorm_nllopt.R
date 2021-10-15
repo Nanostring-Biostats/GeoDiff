@@ -1,4 +1,4 @@
-PoisthNorm_scalenll <- function(X, Y, probenum = rep(1, NROW(Y)), betamat, sizefact0, threshold, sizescale, threshold_mean) {
+PoisthNorm_scalenll <- function(X, Y, probenum, betamat, sizefact0, threshold, sizescale, threshold_mean) {
     tmp0 <- 2^(X %*% betamat)
 
     if (sizescale) {

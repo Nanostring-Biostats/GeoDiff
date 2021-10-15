@@ -70,4 +70,19 @@ for (used in names(aggdObjs)) {
             length(unique(fData(endoObj)[["TargetName"]])) + dim(demoNeg)[1L]
         expect_equal(dim(aggd)[1L], featLen)
     })
+    # Spec 7: Single probe targets shall be returned without aggregation
+    test_that(paste0(used, "WTA data (single probe) is not aggregated"), {
+        data("kidney")
+        all0probeidx <- which(rowSums(exprs(kidney))==0)
+        kidney <- kidney[-all0probeidx, ]
+        kidney <- fitPoisBG(kidney, size_scale = "sum")
+        aggdKid <- aggreprobe(kidney, split=FALSE, use = used)
+        endoKid <- kidney[which(fData(kidney)$CodeClass != "Negative"), ]
+        negKid <- kidney[which(fData(kidney)$CodeClass == "Negative"), ]
+        kidLen <-
+            length(unique(fData(endoKid)[["TargetName"]])) + dim(negKid)[1L]
+        expect_equal(dim(aggdKid)[1L], kidLen)
+        endoAggdKid <- aggdKid[which(fData(aggdKid)$CodeClass != "Negative"), ]
+        expect_true(all(exprs(endoAggdKid)[fData(endoKid)$TargetName, ] == exprs(endoKid)))
+    })
 }

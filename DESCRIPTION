@@ -4,9 +4,8 @@ Title: Count model based differential expression and normalization on GeoMx RNA 
 Version: 0.99.3
 Authors@R: c(person("Lei", "Yang", email = "lyang@nanostring.com", role = c("aut")), 
              person("Zhi", "Yang", email = "zyang@nanostring.com", role = c("cre", "aut")))
-Description: We developed a series of statistical models using count generating distributions for fundamental tasks including background modelling, target and sample QC, normalization and differential expression analysis. The new methods are shown to be more suitable for these tasks in real examples than some conventional methods. We present GeoDiff, an R package for count generating models for analyzing Geomx RNA data, demonstrated by example data analysis pipeline vignette.
+Description: A series of statistical models using count generating distributions for background modelling, feature and sample QC, normalization and differential expression analysis on GeoMx RNA data. The application of these methods are demonstrated by example data analysis vignette.
 Imports:
-    magrittr,
     Matrix,
     robust,
     plyr,
@@ -17,18 +16,20 @@ Imports:
     methods,
     graphics,
     stats,
-    testthat
+    testthat,
+    GeomxTools
 LinkingTo: Rcpp, RcppArmadillo, roptim  
 License: MIT + file LICENSE
+URL: https://github.com/Nanostring-Biostats/GeoDiff
+BugReports: https://github.com/Nanostring-Biostats/GeoDiff
 Encoding: UTF-8
 Suggests: 
     knitr,
     rmarkdown,
-    GeomxTools,
     dplyr
 VignetteBuilder: knitr
 Depends: 
-    R (>= 3.6),
+    R (>= 4.1.0),
     Biobase
 RoxygenNote: 7.1.2
 biocViews: GeneExpression, DifferentialExpression, Normalization

@@ -27,7 +27,7 @@ fitNBth(object, ...)
 \S4method{fitNBth}{matrix}(
   object,
   features_high,
-  probenum = rep(1, NROW(object)),
+  probenum,
   sizefact_BG,
   sizefact_start = sizefact_BG,
   size_scale = c("sum", "first"),
@@ -117,8 +117,8 @@ demo_neg <- demoData[which(fData(demoData)$CodeClass == "Negative"), ]
 sc1_scores <- fData(demo_pos)[, "scores"]
 names(sc1_scores) <- fData(demo_pos)[, "TargetName"]
 features_high <- ((sc1_scores > quantile(sc1_scores, probs = 0.4)) &
-   (sc1_scores < quantile(sc1_scores, probs = 0.95))) \%>\%
-    which() \%>\%
+   (sc1_scores < quantile(sc1_scores, probs = 0.95))) |>
+    which() |>
     names()
 set.seed(123)
 features_high <- sample(features_high, 100)
