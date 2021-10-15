@@ -336,7 +336,7 @@ NBthmDEmodslope <- fitNBthmDE(object = kidney,
 
 Relation between models.
 
-```{r}
+```{r, fig.height=4, fig.width=4}
 plot(NBthDEmod$para[2,names(NBthmDEmod$para[2,])], NBthmDEmod$para[2,],
      xlab = "Fixed Effect Model Output Parameters", ylab = "Mixed Effect Model Output Parameters")
 abline(a=0,b=1)
@@ -367,7 +367,7 @@ annot$ACADM <- posdat[diff_high,]
 The figure below shows there are huge variation in the difference between two levels of region
 within each slide.
 
-```{r}
+```{r, fig.height=4, fig.width=4}
 
 plot_dat <- annot[,c("region", "ACADM", "slide name")]
 
@@ -487,7 +487,7 @@ norm_dat_backqu75 <- sweep(posdat[, ROIs_high], 2,
 ```
 
 
-```{r, fig.width = 5, fig.height = 5}
+```{r, fig.height=4, fig.width=4}
 dat_plot <- cbind(pData(kidney)[ROIs_high, c("slide name", "region")],
                   t(norm_dat_backqu75[features_all, ]))
 
@@ -504,7 +504,7 @@ ggplot(dat_plot, aes(x = value)) +
 
 Here you can see that Q3 normalization is prone to low values.
 
-```{r, fig.width = 5, fig.height = 5}
+```{r, fig.height=4, fig.width=4}
 annot <- pData(kidney)
 
 dat_plot <- cbind(annot[ROIs_high, c("slide name", "region")],
@@ -527,7 +527,7 @@ eliminating the spikes in low values.
 
 #### Clustering
 
-```{r}
+```{r, fig.height=4, fig.width=4}
 dat <- t(norm_dat_backqu75[features_high, ])
 dat_pca <- prcomp(dat, center = TRUE, scale. = TRUE)
 dat <- as.data.frame(dat)
@@ -562,7 +562,7 @@ is mostly driven by the ratio of background to signal size ratio as shown in the
 With the Poisson Threshold normalization, the ROIs still cluster by region and class but the first
 PC is not strictly driven by the background to signal size ratio.
 
-```{r}
+```{r, fig.height=4, fig.width=4}
 dat <- t(assayDataElement(kidney[features_high, ROIs_high],"normmat_sp"))
 dat_pca <- prcomp(dat, center = TRUE, scale. = TRUE)
 dat <- as.data.frame(dat)
