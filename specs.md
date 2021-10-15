@@ -1,7 +1,6 @@
 #### Specs for fitPoisBG:
 When groupvar is not provided,   
 1. The function outputs a GeoMx S4 class with length same as length of ROIs, sizefact, in phenoData.  
-test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitPoisBG.R#L14
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitPoisBG.R#L20
 2. The function outputs a GeoMx S4 class with length same as length of negative probes, featfact, in featureData. The value is NA for non-negative probes.  
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitPoisBG.R#L23
@@ -20,7 +19,6 @@ test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833
 
 When groupvar is provided and found in the phenodata with more than one unique value,     
 1. The function outputs a GeoMx S4 class with length same as length of ROIs, sizefact_sp, in phenoData.  
-test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitPoisBG.R#L90
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitPoisBG.R#L95
 2. The function outputs a GeoMx S4 class with length same as length of negative probes, featfact_sp, in featureData for each unique slide value. The value is NA for non-negative probes.  
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitPoisBG.R#L91
