@@ -124,7 +124,7 @@ account. Here we are grouping the ROIs by slide.
 kidney <- fitPoisBG(kidney, groupvar = "slide name")
 ```
 
-The diagnosis of this model shows that when splitting by slide we similar results as without splitting.
+The diagnosis of this model shows that when splitting by slide we similar results as without splitting in this dataset.
 
 ```{r}
 set.seed(123)
