@@ -86,7 +86,7 @@ Poisson background model using negative probes.
 The background model works on the probe level data with all of the negative probes. 
 Please do not use aggregateCounts from GeomxTools before modeling.
 ```{r, probe level}
-kidney@featureType
+featureType(kidney)
 
 paste("## of Negative Probes:", sum(fData(kidney)$Negative))
 ```
@@ -188,7 +188,7 @@ factor represents technical variation between ROIs like sequencing depth
 
 The feature_high_fitNBth labeled genes are ones well above background that will be used in later steps.
 
-```{r, cache=TRUE}
+```{r}
 set.seed(123)
 
 kidney <- fitNBth(kidney)
@@ -268,14 +268,11 @@ features_all <- rownames(posdat)
 
 Running the DE model with default values. 
 
-```{r, cache=TRUE}
+```{r}
 
-NBthDEmod <- fitNBthDE(form = ~region, 
-                        split = FALSE, 
-                        object = kidney,
-                        preci2=10000,
-                        prior_type="contrast", 
-                        preci1con=1/25)
+NBthDEmod <- fitNBthDE(form = ~region,
+                       split = FALSE,
+                       object = kidney)
 
 str(NBthDEmod)
 ```
@@ -305,15 +302,14 @@ Random intercept model only for high genes as an example, takes about 1 hour on 
 ```{r, message=FALSE}
 set.seed(123)
 NBthmDEmod <- fitNBthmDE(object = kidney,
-                          form = ~ region+(1|`slide name`), 
-                          ROIs_high = ROIs_high, 
-                          split = FALSE,
-                          features_all = features_high_subset, 
-                          preci1=NBthDEmod$preci1, 
-                          threshold_mean = bgMean,
-                          preci2=10000, 
-                          sizescale = TRUE, 
-                          controlRandom=list(nu=12, nmh_e=400, thin_e=60))
+                         form = ~ region+(1|`slide name`),
+                         ROIs_high = ROIs_high,
+                         split = FALSE,
+                         features_all = features_high_subset, 
+                         preci1=NBthDEmod$preci1,
+                         threshold_mean = bgMean,
+                         sizescale = TRUE,
+                         controlRandom=list(nu=12, nmh_e=400, thin_e=60))
 
 str(NBthmDEmod)
 ```
@@ -324,12 +320,11 @@ Random slope model (recommended for this study design), takes about 4 hours on t
 set.seed(123)
 NBthmDEmodslope <- fitNBthmDE(object = kidney, 
                               form = ~ region+(1+region|`slide name`), 
+                              ROIs_high = ROIs_high,
                               split = FALSE,
-                              ROIs_high = ROIs_high, 
                               features_all = features_high_subset,
                               preci1=NBthDEmod$preci1,
-                              threshold_mean = bgMean, 
-                              preci2=10000, 
+                              threshold_mean = bgMean,
                               sizescale = TRUE,
                               controlRandom=list(nu=12, nmh_e=400, thin_e=60))
 ```
@@ -424,12 +419,10 @@ set.seed(123)
 
 names(kidney@assayData)
 
-kidney <- fitPoisthNorm(
-  object = kidney,
-  threshold_mean = 1,
-  preci2 = 10000,
-  prior_type = "contrast"
-)
+kidney <- fitPoisthNorm(object = kidney,
+                        ROIs_high = ROIs_high,
+                        threshold_mean = bgMean,
+                        sizescalebythreshold = TRUE)
 
 names(kidney@assayData)
 
@@ -451,19 +444,13 @@ Convergence and parameter values are added to pData and fData.
 
 In this normalize, we split by slide.
 
-```{r, cache=TRUE}
+```{r}
 set.seed(123)
 
 kidney <- fitPoisthNorm(object = kidney,
                         split = TRUE,
-                        ROIs_high = ROIs_high, 
-                        features_high = features_high, 
-                        features_all = features_all,
-                        sizefact_start = kidney[, ROIs_high][['sizefact_fitNBth']],
-                        sizefact_BG = kidney[, ROIs_high][['sizefact']], 
+                        ROIs_high = ROIs_high,
                         threshold_mean = bgMean,
-                        preci2 = 10000,
-                        prior_type = "contrast",
                         sizescalebythreshold = TRUE)
 
 names(kidney@assayData)
@@ -555,7 +542,7 @@ plot(p)
 p <- ggplot(data = dat, aes(x = PC1, y = PC2)) +
   geom_point(aes(colour = log2(sizeratio))) +
   theme_bw()+
-  viridis::scale_color_viridis(option = "E")+
+  scale_color_gradient2(high = "gold", mid = "grey50", low = "darkblue", midpoint = 0.2)+
   labs(title = "Q3 Normalized Data")
 
 plot(p)
@@ -590,7 +577,7 @@ plot(p)
 p <- ggplot(data = dat, aes(x = PC1, y = PC2)) +
   geom_point(aes(colour = log2(sizeratio))) +
   theme_bw()+
-  viridis::scale_color_viridis(option = "E")+
+  scale_color_gradient2(high = "gold", mid = "grey50", low = "darkblue", midpoint = 0.2)+
   labs(title = "Poisson Threshold Normalized Data")
 
 plot(p)
