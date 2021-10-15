@@ -37,8 +37,8 @@ test_that("fitNBthmDE produces desired results, CTA", {
   names(sc1_scores) <- fData(demo_pos)[, "TargetName"]
   # scaling factors
   features_high <- ((sc1_scores > quantile(sc1_scores, probs = 0.4)) &
-                      (sc1_scores < quantile(sc1_scores, probs = 0.95))) %>%
-    which() %>%
+                      (sc1_scores < quantile(sc1_scores, probs = 0.95))) |>
+    which() |>
     names()
   set.seed(123)
   # Negative Binomial threshold model
@@ -156,6 +156,9 @@ test_that("fitNBthmDE produces desired results, WTA", {
 
   kidney <- fitPoisBG(kidney, size_scale = "sum")
   kidney <- fitPoisBG(kidney, groupvar = "slide name", size_scale = "sum")
+  all0probeidx <- which(rowSums(exprs(kidney))==0)
+  kidney <- kidney[-all0probeidx, ]
+  kidney <- aggreprobe(kidney, use = "cor")
 
   # Negative Binomial threshold model
   set.seed(123)
@@ -172,7 +175,7 @@ test_that("fitNBthmDE produces desired results, WTA", {
   kidney_neg <- kidney[which(fData(kidney)$CodeClass == "Negative"), ]
   featfact <- fData(kidney_neg)[, "featfact"]
   thmean <- 1*mean(featfact)
-  features_high <- ((gene_sum>quantile(gene_sum, probs = 0.5)) & (gene_sum<quantile(gene_sum, probs = 0.95))) %>% which %>% names
+  features_high <- ((gene_sum>quantile(gene_sum, probs = 0.5)) & (gene_sum<quantile(gene_sum, probs = 0.95))) |> which() |> names()
   set.seed(123)
   features_high <- sample(features_high, 1500)
   ROIs_high <- sampleNames(kidney)[which((quantile(fData(kidney)[["para"]][, 1],
