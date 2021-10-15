@@ -128,7 +128,7 @@ setMethod(
     "fitPoisthNorm", "NanoStringGeoMxSet",
     function(object, split = FALSE, ROIs_high = NULL, features_high = NULL,
     features_all = NULL, sizefact_start = NULL, sizefact_BG = NULL,
-    threshold_mean = NULL, preci2=10000, iterations = 2, prior_type = c("equal", "contrast"),
+    threshold_mean = NULL, preci2=10000, iterations = 2, prior_type = c("contrast", "equal"),
     sizefactrec = TRUE, size_scale = c("sum", "first"), sizescalebythreshold = FALSE,
     covrob = FALSE, preci1con = 1 / 25, cutoff = 15, confac = 1, calhes = FALSE) {
         # calculate backmean
@@ -466,7 +466,7 @@ setMethod(
     "fitPoisthNorm", "matrix",
     function(object, probenum = rep(1, NROW(object)), features_high, features_all,
     sizefact_start, sizefact_BG, threshold_mean, preci2=10000, iterations = 2,
-    prior_type = c("equal", "contrast"), sizefactrec = TRUE, size_scale = c("sum", "first"),
+    prior_type = c("contrast", "equal"), sizefactrec = TRUE, size_scale = c("sum", "first"),
     sizescalebythreshold = FALSE, covrob = FALSE, preci1con = 1 / 25, cutoff = 15, confac = 1, calhes = FALSE) {
         if (iterations != 2) {
             stop("Only iterations=2 is allowed")
@@ -653,7 +653,7 @@ setMethod(
     "fitPoisthNorm_sp", "matrix",
     function(object, probenum, features_high,
     features_all = colnames(object), sizefact_start, sizefact_BG,
-    threshold_mean, preci2=10000, id, iterations = 2, prior_type = c("equal", "contrast"),
+    threshold_mean, preci2=10000, id, iterations = 2, prior_type = c("contrast", "equal"),
     sizefactrec = TRUE, size_scale = c("sum", "first"), sizescalebythreshold = FALSE,
     covrob = FALSE, preci1con = 1 / 25, cutoff = 15, confac = 1) {
         uniid <- unique(as.character(id))

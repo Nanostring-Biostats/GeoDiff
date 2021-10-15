@@ -19,7 +19,7 @@ fitPoisthNorm_sp(object, ...)
   preci2 = 10000,
   id,
   iterations = 2,
-  prior_type = c("equal", "contrast"),
+  prior_type = c("contrast", "equal"),
   sizefactrec = TRUE,
   size_scale = c("sum", "first"),
   sizescalebythreshold = FALSE,
