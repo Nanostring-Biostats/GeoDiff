@@ -10,7 +10,7 @@
 #' @param sizefact_start initial value for size factors
 #' @param sizefact_BG size factor for background
 #' @param threshold_mean average threshold level
-#' @param preci2 precision for threshold
+#' @param preci2 precision for threshold, default=10000
 #' @param iterations iteration number, default=2,
 #'                   the first iteration using the features_high to construct the prior for parameters then refit the model on all features.
 #'                   precision matrix for threshold: preci2
@@ -79,8 +79,8 @@
 #' sc1_scores <- fData(demo_pos)[, "scores"]
 #' names(sc1_scores) <- fData(demo_pos)[, "TargetName"]
 #' features_high <- ((sc1_scores > quantile(sc1_scores, probs = 0.4)) &
-#'    (sc1_scores < quantile(sc1_scores, probs = 0.95))) %>%
-#'     which() %>%
+#'    (sc1_scores < quantile(sc1_scores, probs = 0.95))) |>
+#'     which() |>
 #'     names()
 #' set.seed(123)
 #' features_high <- sample(features_high, 100)
@@ -128,7 +128,7 @@ setMethod(
     "fitPoisthNorm", "NanoStringGeoMxSet",
     function(object, split = FALSE, ROIs_high = NULL, features_high = NULL,
     features_all = NULL, sizefact_start = NULL, sizefact_BG = NULL,
-    threshold_mean = NULL, preci2, iterations = 2, prior_type = c("equal", "contrast"),
+    threshold_mean = NULL, preci2=10000, iterations = 2, prior_type = c("equal", "contrast"),
     sizefactrec = TRUE, size_scale = c("sum", "first"), sizescalebythreshold = FALSE,
     covrob = FALSE, preci1con = 1 / 25, cutoff = 15, confac = 1, calhes = FALSE) {
         # calculate backmean
@@ -426,7 +426,7 @@ setMethod(
 #' @param sizefact_start initial value for size factors
 #' @param sizefact_BG size factor for background
 #' @param threshold_mean average threshold level
-#' @param preci2 precision for threshold
+#' @param preci2 precision for threshold, default=10000
 #' @param iterations iteration number, default=2,
 #'                   the first iteration using the features_high to construct the prior for parameters then refit the model on all features.
 #'                   precision matrix for threshold: preci2
@@ -464,8 +464,8 @@ setMethod(
 
 setMethod(
     "fitPoisthNorm", "matrix",
-    function(object, probenum, features_high, features_all,
-    sizefact_start, sizefact_BG, threshold_mean, preci2, iterations = 2,
+    function(object, probenum = rep(1, NROW(object)), features_high, features_all,
+    sizefact_start, sizefact_BG, threshold_mean, preci2=10000, iterations = 2,
     prior_type = c("equal", "contrast"), sizefactrec = TRUE, size_scale = c("sum", "first"),
     sizescalebythreshold = FALSE, covrob = FALSE, preci1con = 1 / 25, cutoff = 15, confac = 1, calhes = FALSE) {
         if (iterations != 2) {
@@ -608,7 +608,7 @@ setMethod(
 #' @param sizefact_start initial value for size factors
 #' @param sizefact_BG size factor for background
 #' @param threshold_mean average threshold level
-#' @param preci2 precision for threshold
+#' @param preci2 precision for threshold, default=10000
 #' @param id character vector of slide name of each sample
 #' @param iterations iteration number, default=2,
 #'                   the first iteration using the features_high to construct the prior for parameters then refit the model on all features.
@@ -653,7 +653,7 @@ setMethod(
     "fitPoisthNorm_sp", "matrix",
     function(object, probenum, features_high,
     features_all = colnames(object), sizefact_start, sizefact_BG,
-    threshold_mean, preci2, id, iterations = 2, prior_type = c("equal", "contrast"),
+    threshold_mean, preci2=10000, id, iterations = 2, prior_type = c("equal", "contrast"),
     sizefactrec = TRUE, size_scale = c("sum", "first"), sizescalebythreshold = FALSE,
     covrob = FALSE, preci1con = 1 / 25, cutoff = 15, confac = 1) {
         uniid <- unique(as.character(id))

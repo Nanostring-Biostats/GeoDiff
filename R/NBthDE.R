@@ -11,7 +11,7 @@
 #' @param sizefact_start initial value for size factors
 #' @param sizefact_BG size factor for background
 #' @param threshold_mean average threshold level
-#' @param preci2 precision for the background
+#' @param preci2 precision for the background, default=10000
 #' @param lower_threshold lower limit for the threshold, default=0.01
 #' @param prior_type empirical bayes prior type, choose from c("equal","byvar", "contrast")
 #' @param sizefactrec whether to recalculate sizefact, default=TRUE
@@ -20,7 +20,7 @@
 #' @param iterations how many iterations need to run to get final results, default=2,
 #'                   the first iteration apply the model only on features_high and construct the prior then refit the model using this prior for all genes.
 #' @param covrob whether to use robust covariance in calculating covariance. default=FALSE
-#' @param preci1con The user input constant term in specifying precision matrix 1
+#' @param preci1con The user input constant term in specifying precision matrix 1, default=1/25
 #' @param cutoff term in calculating precision matrix 1, default=10
 #' @param confac The user input factor for contrast in precision matrix 1, default=1
 #' @param ... additional argument list that might be used
@@ -64,8 +64,8 @@
 #' sc1_scores <- fData(demo_pos)[, "scores"]
 #' names(sc1_scores) <- fData(demo_pos)[, "TargetName"]
 #' features_high <- ((sc1_scores > quantile(sc1_scores, probs = 0.4)) &
-#'    (sc1_scores < quantile(sc1_scores, probs = 0.95))) %>%
-#'     which() %>%
+#'    (sc1_scores < quantile(sc1_scores, probs = 0.95))) |>
+#'     which() |>
 #'     names()
 #' set.seed(123)
 #' demoData <- fitNBth(demoData,
@@ -115,10 +115,10 @@ setMethod(
     function(object, form, split, ROIs_high = NULL,
     features_high = NULL, features_all = NULL,
     sizefact_start = NULL, sizefact_BG = NULL,
-    threshold_mean = NULL, preci2, lower_threshold = 0.01,
-    prior_type = c("equal", "contrast"), sizefactrec = TRUE,
+    threshold_mean = NULL, preci2 = 10000, lower_threshold = 0.01,
+    prior_type = c("contrast", "equal"), sizefactrec = TRUE,
     size_scale = c("sum", "first"), sizescalebythreshold = FALSE,
-    iterations = 2, covrob = FALSE, preci1con, cutoff = 10, confac = 1) {
+    iterations = 2, covrob = FALSE, preci1con=1/25, cutoff = 10, confac = 1) {
         fDat <- Biobase::fData(object)
         pDat <- Biobase::pData(object)
 
@@ -287,16 +287,16 @@ setMethod(
 #' @param sizefact_start initial value for size factors
 #' @param sizefact_BG size factor for background
 #' @param threshold_mean average threshold level
-#' @param preci2 precision for the background
+#' @param preci2 precision for the background, default=10000
 #' @param lower_threshold lower limit for the threshold, default=0.01
-#' @param prior_type empirical bayes prior type, choose from c("equal", "contrast")
+#' @param prior_type empirical bayes prior type, choose from c("contrast", "equal")
 #' @param sizefactrec whether to recalculate sizefact, default=TRUE
 #' @param size_scale method to scale the sizefact, sum(sizefact)=1 when size_scale="sum", sizefact[1]=1 when size_scale="first"
 #' @param sizescalebythreshold XXXX, default = FALSE
 #' @param iterations how many iterations need to run to get final results, default=2,
 #'                   the first iteration apply the model only on features_high and construct the prior then refit the model using this prior for all genes.
 #' @param covrob whether to use robust covariance in calculating covariance. default=FALSE
-#' @param preci1con The user input constant term in specifying precision matrix 1
+#' @param preci1con The user input constant term in specifying precision matrix 1, default=1/25
 #' @param cutoff term in calculating precision matrix 1, default=10
 #' @param confac The user input factor for contrast in precision matrix 1, default=1
 #' @param ... additional argument list that might be used
@@ -326,10 +326,10 @@ setMethod(
     "fitNBthDE", "matrix",
     function(form, annot, object, probenum,
     features_high, features_all, sizefact_start, sizefact_BG,
-    threshold_mean, preci2, lower_threshold = 0.01,
-    prior_type = c("equal", "contrast"), sizefactrec = TRUE,
+    threshold_mean, preci2=10000, lower_threshold = 0.01,
+    prior_type = c("contrast", "equal"), sizefactrec = TRUE,
     size_scale = c("sum", "first"), sizescalebythreshold = FALSE,
-    iterations = 2, covrob = FALSE, preci1con, cutoff = 10, confac = 1) {
+    iterations = 2, covrob = FALSE, preci1con=1/25, cutoff = 10, confac = 1) {
         if (iterations == 1) {
             if (!setequal(features_high, features_all)) {
                 warning("features_high and features_all need to be identical when iterations=1,

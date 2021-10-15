@@ -168,7 +168,7 @@ gene_sum <- rowSums(posdat)
 kidney_neg <- kidney[which(fData(kidney)$CodeClass == "Negative"), ]
 featfact <- fData(kidney_neg)[, "featfact"]
 
-features_high <- ((gene_sum>quantile(gene_sum, probs = 0.5)) & (gene_sum<quantile(gene_sum, probs = 0.95))) %>% which %>% names
+features_high <- ((gene_sum>quantile(gene_sum, probs = 0.5)) & (gene_sum<quantile(gene_sum, probs = 0.95))) |> which() |> names()
 
 set.seed(123)
 
@@ -487,10 +487,10 @@ coefrslope <- coefNBth(NBthmDEmod2slope)
 
 
 ```{r}
-is.na(coeff$p_value)%>%sum
-is.na(coeffhighpen$p_value)%>%sum
-is.na(coefr$p_value)%>%sum
-is.na(coefrslope$p_value)%>%sum
+is.na(coeff$p_value)|>sum()
+is.na(coeffhighpen$p_value)|>sum()
+is.na(coefr$p_value)|>sum()
+is.na(coefrslope$p_value)|>sum()
 ```
 
 
@@ -640,10 +640,10 @@ Compared to background subtraction and Q75 normalization
 
 ```{r}
 
-norm_dat_backqu75 <- sweep(posdat[, ROIs_high], 2, (kidney[, ROIs_high]$sizefact * thmean), FUN = "-") %>%
-  sweep(., 2, quan75[ROIs_high], FUN = "/") %>%
-  pmax(., 0) %>%
-  `+`(., 0.01) %>%
+norm_dat_backqu75 <- sweep(posdat[, ROIs_high], 2, (kidney[, ROIs_high]$sizefact * thmean), FUN = "-") |>
+  (function(x) sweep(x, 2, quan75[ROIs_high], FUN = "/"))() |>
+  (function(x) pmax(x, 0))() |>
+  (function(x) x+0.01)() |>
   log2()
 ```
 

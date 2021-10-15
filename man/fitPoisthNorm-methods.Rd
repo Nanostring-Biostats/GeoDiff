@@ -18,7 +18,7 @@ fitPoisthNorm(object, ...)
   sizefact_start = NULL,
   sizefact_BG = NULL,
   threshold_mean = NULL,
-  preci2,
+  preci2 = 10000,
   iterations = 2,
   prior_type = c("equal", "contrast"),
   sizefactrec = TRUE,
@@ -39,7 +39,7 @@ fitPoisthNorm(object, ...)
   sizefact_start,
   sizefact_BG,
   threshold_mean,
-  preci2,
+  preci2 = 10000,
   iterations = 2,
   prior_type = c("equal", "contrast"),
   sizefactrec = TRUE,
@@ -71,7 +71,7 @@ fitPoisthNorm(object, ...)
 
 \item{threshold_mean}{average threshold level}
 
-\item{preci2}{precision for threshold}
+\item{preci2}{precision for threshold, default=10000}
 
 \item{iterations}{iteration number, default=2,
 the first iteration using the features_high to construct the prior for parameters then refit the model on all features.
@@ -162,8 +162,8 @@ demo_neg <- demoData[which(fData(demoData)$CodeClass == "Negative"), ]
 sc1_scores <- fData(demo_pos)[, "scores"]
 names(sc1_scores) <- fData(demo_pos)[, "TargetName"]
 features_high <- ((sc1_scores > quantile(sc1_scores, probs = 0.4)) &
-   (sc1_scores < quantile(sc1_scores, probs = 0.95))) \%>\%
-    which() \%>\%
+   (sc1_scores < quantile(sc1_scores, probs = 0.95))) |>
+    which() |>
     names()
 set.seed(123)
 features_high <- sample(features_high, 100)

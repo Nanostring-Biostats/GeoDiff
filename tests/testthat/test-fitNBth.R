@@ -36,11 +36,11 @@ test_that("fitNBth produces desired results, CTA", {
     # scaling factors
     features_high <- apply(scores_sp, 2, function(x){
         ((x > quantile(x, probs = 0.4)) & (x < quantile(x, probs = 0.95)))
-    }) %>% apply(., 1, function(x) all(x)) %>%
-        which() %>%
+    }) |> (function(x) apply(x, 1, function(y) all(y)))() |>
+        which() |>
         names()
     featfact_sp <- fData(NSGMS_neg)[, grep("featfact_", fvarLabels(NSGMS_neg))]
-    thmean <- (featfact_sp %>% colMeans() %>% .[1]) # picks the first slide name's value
+    thmean <- (featfact_sp |> colMeans())[1] # picks the first slide name's value
 
     ### Case 1: run examplar function from vignette and check each specification
     case1 <- fitNBth(NSGMS,
@@ -141,12 +141,12 @@ test_that("fitNBth produces desired results, WTA", {
     # scaling factors
     posdat <- Biobase::exprs(NSGMS_pos)
     gene_sum <- rowSums(posdat)
-    features_high <- ((gene_sum > quantile(gene_sum, probs = 0.5)) & (gene_sum < quantile(gene_sum, probs = 0.95))) %>%
-        which() %>%
+    features_high <- ((gene_sum > quantile(gene_sum, probs = 0.5)) & (gene_sum < quantile(gene_sum, probs = 0.95))) |>
+        which() |>
         names()
     set.seed(123)
     genes_high <- sample(features_high, 1500) # subset
-    thmean <- 1 * (featfact_sp %>% colMeans() %>% .[1]) # picks the first slide name's value
+    thmean <- 1 * (featfact_sp |> colMeans())[1] # picks the first slide name's value
 
     ### Case 1: run examplar function from vignette and check each specification
     set.seed(123)

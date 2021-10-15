@@ -16,7 +16,7 @@ fitPoisthNorm_sp(object, ...)
   sizefact_start,
   sizefact_BG,
   threshold_mean,
-  preci2,
+  preci2 = 10000,
   id,
   iterations = 2,
   prior_type = c("equal", "contrast"),
@@ -46,7 +46,7 @@ fitPoisthNorm_sp(object, ...)
 
 \item{threshold_mean}{average threshold level}
 
-\item{preci2}{precision for threshold}
+\item{preci2}{precision for threshold, default=10000}
 
 \item{id}{character vector of slide name of each sample}
 
