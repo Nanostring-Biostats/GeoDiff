@@ -137,12 +137,13 @@ notes(kidney_diag)$disper_sp
 
 After subsetting, we have a couple probes with 0 counts in all 16 ROIs so we will remove them here.
 
-aggreprobe is a GeoDiff specific probe aggregation. The negative probes do not get aggregated and
-probes get filtered based on either correlation and/or the score test.
+aggreprobe is a GeoDiff specific function for probe aggregation and filtering. Probes get filtered 
+based on either correlation and/or the score test within targets and then aggregated. The negative 
+probes do not get aggregated or filtered.
 
 ```{r}
 all0probeidx <- which(rowSums(exprs(kidney))==0)
-if (length(all0probeidx) > 1) {
+if (length(all0probeidx) > 0) {
     kidney <- kidney[-all0probeidx, ]
 }
 kidney <- aggreprobe(kidney, use = "cor")
@@ -153,8 +154,9 @@ kidney <- aggreprobe(kidney, use = "cor")
 
 ### Score test
 
-Using the background score test, we can determine which probes are above background. To subsample
-the data to just the probes above background, keep probes with a p-value less than 1e-3.
+Using the background score test, we can determine which targets are expressed above the background 
+of the negative probes across this dataset. We can then filter the data to only targets above 
+background, using a suggested pvalue threshold of 1e-3.
 
 ```{r}
 kidney <- BGScoreTest(kidney)
@@ -165,7 +167,7 @@ sum(fData(kidney)[["pvalues"]] < 1e-3, na.rm = TRUE)
 For advanced users, there are 3 variables that can be changed in the score test. The default for all
 three variables is FALSE. Any combination of these variables can be used.
 
-  1. split         - should the split poisson background values be used
+  1. split         - should the poisson background values split by group be used
   2. removeoutlier - should outlier negatives be removed
   3. useprior      - use prior that the expression level of background follows a Beta distribution,
                          this will lead to a more conservative test but is prone to influence by
@@ -252,7 +254,8 @@ corrs
 
 ## Sample QC
 
-To filter out poor quality ROIs, we only keep those which have a high enough threshold.
+To filter out poor quality ROIs, we only keep those which have a high enough signal in comparison to 
+the background. 
 
 ```{r}
 ROIs_high <- sampleNames(kidney)[which((quantile(fData(kidney)[["para"]][, 1],
@@ -335,11 +338,11 @@ Relation between models.
 
 ```{r}
 plot(NBthDEmod$para[2,names(NBthmDEmod$para[2,])], NBthmDEmod$para[2,],
-     xlab = "Fixed Effect model", ylab = "Mixed Effect Model")
+     xlab = "Fixed Effect Model Output Parameters", ylab = "Mixed Effect Model Output Parameters")
 abline(a=0,b=1)
 
 plot(NBthDEmod$para[2,names(NBthmDEmodslope$para[2,])], NBthmDEmodslope$para[2,],
-     xlab = "Fixed Effect Model", ylab = "Random Slope Model")
+     xlab = "Fixed Effect Model Output Parameters", ylab = "Random Slope Model Output Parameters")
 abline(a=0,b=1)
 
 ```
@@ -553,11 +556,11 @@ plot(p)
 ```
 
 As you can see in the first PCA plot, the ROIs cluster by region and class.  However, the first PC
-is mostly driven by the size ratio as shown in the second PCA plot.
+is mostly driven by the ratio of background to signal size ratio as shown in the second PCA plot.
 
 
 With the Poisson Threshold normalization, the ROIs still cluster by region and class but the first
-PC is not strictly driven by the size ratio.
+PC is not strictly driven by the background to signal size ratio.
 
 ```{r}
 dat <- t(assayDataElement(kidney[features_high, ROIs_high],"normmat_sp"))
