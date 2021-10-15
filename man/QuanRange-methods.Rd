@@ -11,13 +11,7 @@ QuanRange(object, ...)
 
 \S4method{QuanRange}{NanoStringGeoMxSet}(object, split = FALSE, probs, removeoutlier = FALSE, ...)
 
-\S4method{QuanRange}{matrix}(
-  object,
-  probenum,
-  BGmod,
-  probs,
-  removeoutlier = FALSE
-)
+\S4method{QuanRange}{matrix}(object, probenum, BGmod, probs, removeoutlier = FALSE)
 }
 \arguments{
 \item{object}{count matrix with features in rows and samples in columns}

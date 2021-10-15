@@ -28,7 +28,7 @@ fitNBthmDE(object, ...)
   form,
   annot,
   object,
-  probenum,
+  probenum = rep(1, NROW(object)),
   features_all,
   sizefact,
   sizefact_BG,
