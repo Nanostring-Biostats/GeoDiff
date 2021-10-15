@@ -485,7 +485,7 @@ setMethod(
 
 
         if (prior_type == "equal") {
-            preci1 <- t(X) %*% preci1con * diag(1, n_para) %*% X
+            preci1 <- preci1con * t(X) %*%  diag(1, n_para) %*% X
         } else if (prior_type == "contrast") {
             contrvec <- t(rep(1 / n_para, n_para)) %*% X
 
