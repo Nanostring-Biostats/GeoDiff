@@ -101,9 +101,8 @@ summary(pData(kidney)$sizefact)
 summary(fData(kidney)$featfact[fData(kidney)$Negative])
 ```
 
-After running the model, we can diagnose it and see if there are any issues in the dataset.
-By checking the dispersion of the model, we can determine if things like batch effect or large
-outliers are present in the data.
+After running the model, we can diagnose it and see if there are any issues in the dataset. One key metric for Poisson model is the dispersion. When dispersion is big, it is called over-dispersion which often indicate batch effect or large
+outliers in the data.
 
 ```{r}
 set.seed(123)
