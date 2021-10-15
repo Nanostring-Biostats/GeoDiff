@@ -409,6 +409,9 @@ DEtabrslope <- DENBth(coefrslope, variable = "regiontubule")
 head(DEtab)
 ```
 
+For datasets with multiple comparisons, contrastNBth() can be used to create all pair-wise 
+comparisons. That output can also be run through DENBth to create a DE table. 
+
 ## Normalization
 
 Here we normalize the data using a Poisson threshold model based normalization-log2 transformation. 
