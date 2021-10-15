@@ -50,8 +50,8 @@ test_that("fitPoisthNorm when split = FALSE produces desired results", {
     sc1_scores <- fData(NSGMS_pos)[, "scores"]
     names(sc1_scores) <- fData(NSGMS_pos)[, "TargetName"]
 
-    features_high <- ((sc1_scores > quantile(sc1_scores, probs = 0.4)) & (sc1_scores < quantile(sc1_scores, probs = 0.95))) %>%
-        which() %>%
+    features_high <- ((sc1_scores > quantile(sc1_scores, probs = 0.4)) & (sc1_scores < quantile(sc1_scores, probs = 0.95))) |>
+        which() |>
         names()
 
     backmean <- mean(featfact)
@@ -333,7 +333,7 @@ test_that("fitPoisthNorm when split = TRUE produces desired results", {
         ((x > quantile(x, probs = 0.4)) & (x < quantile(x, probs = 0.95)))
     })
     features_high_sp <- names(which(apply(features_high_sp, 1, all)))
-    backmean_sp <- (featfact_sp %>% colMeans() %>% .[1])
+    backmean_sp <- (featfact_sp |> colMeans())[1]
 
     # Fit NB
     NSGMS_sp <- fitNBth(NSGMS_sp,
