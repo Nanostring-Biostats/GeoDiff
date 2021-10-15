@@ -210,9 +210,9 @@ bgMean <- mean(fData(kidney)$featfact, na.rm = TRUE)
 notes(kidney)[["threshold"]]
 bgMean
 ```
-This is a sanity check to see that the negative and biological probes are behaving similarly in ROIs.
-Here we can see that the size factors generated from looking at the different subset of probes are
-similar suggesting similar behavior.
+
+This is a sanity check to see that the signal size factor and background size factor are correlated but not redundant.
+
 
 ```{r}
 cor(kidney$sizefact, kidney$sizefact_fitNBth)
@@ -221,7 +221,7 @@ plot(kidney$sizefact, kidney$sizefact_fitNBth, xlab = "Background Size Factor",
 abline(a = 0, b = 1)
 ```
 
-In this dataset, this size factor correlate well with $75\%$ quantile which is used in Q3 normalization.
+In this dataset, this size factor correlate well with different quantiles, including $75\%$ quantile which is used in Q3 normalization.
 
 ```{r}
 # get only biological probes
@@ -239,7 +239,7 @@ corrs
 quan75 <- apply(posdat, 2, function(x) quantile(x, probs = 0.75))
 ```
 
-Quantile range (quantile - background size factor) has even better correlation with the signal size factor
+Quantile range (quantile - background size factor scaled by the mean feature factor of negative probes) has better correlation with the signal size factor.
 
 ```{r}
 kidney <- QuanRange(kidney, split = FALSE, probs = c(0.75, 0.8, 0.9, 0.95))
@@ -256,7 +256,7 @@ corrs
 ## Sample QC
 
 To filter out poor quality ROIs, we only keep those which have a high enough signal in comparison to 
-the background. 
+the background. In this dataset, all ROIs remain.
 
 ```{r}
 ROIs_high <- sampleNames(kidney)[which((quantile(fData(kidney)[["para"]][, 1],
