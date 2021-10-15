@@ -12,6 +12,7 @@ importFrom(graphics, boxplot)
 importFrom(graphics, abline)
 importFrom(withr, local_tempdir)
 importFrom(withr, local_dir)
+importFrom(GeomxTools, featureType)
 
 
 exportMethods(aggreprobe)

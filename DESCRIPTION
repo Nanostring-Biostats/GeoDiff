@@ -16,7 +16,8 @@ Imports:
     methods,
     graphics,
     stats,
-    testthat
+    testthat,
+    GeomxTools
 LinkingTo: Rcpp, RcppArmadillo, roptim  
 License: MIT + file LICENSE
 URL: https://github.com/Nanostring-Biostats/GeoDiff
@@ -25,7 +26,6 @@ Encoding: UTF-8
 Suggests: 
     knitr,
     rmarkdown,
-    GeomxTools,
     dplyr
 VignetteBuilder: knitr
 Depends: 

@@ -20,6 +20,7 @@
 #' @importFrom Biobase phenoData
 #' @importFrom Biobase protocolData
 #' @importFrom Biobase annotation
+#' @importFrom GeomxTools featureType
 #' @importClassesFrom  GeomxTools NanoStringGeoMxSet
 #'
 #' @examples
@@ -40,7 +41,7 @@ setGeneric("aggreprobe",
 setMethod(
     "aggreprobe", "NanoStringGeoMxSet",
     function(object, split, use = c("score", "cor", "both"), corcutoff = 0.85, ...) {
-        if(featureType(object) == "Target") {
+        if(GeomxTools::featureType(object) == "Target") {
             stop("GeoMxSet object feature type is already target-level. ",
                  "No further aggregation can be performed.")
         }
