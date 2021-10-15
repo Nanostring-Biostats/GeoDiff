@@ -93,7 +93,8 @@ paste("## of Negative Probes:", sum(fData(kidney)$Negative))
 ```
 
 
-Every ROI and negative probe gets a model parameter values.
+This model estimates a feature factor for each negative probe and a background size factor for each ROI. 
+
 ```{r}
 kidney <- fitPoisBG(kidney)
 
