@@ -2,6 +2,7 @@
 When groupvar is not provided,   
 1. The function outputs a GeoMx S4 class with length same as length of ROIs, sizefact, in phenoData.  
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitPoisBG.R#L14
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitPoisBG.R#L20
 2. The function outputs a GeoMx S4 class with length same as length of negative probes, featfact, in featureData. The value is NA for non-negative probes.  
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitPoisBG.R#L23
 3. If size_scale="first", sizefact[1]=1  
@@ -17,11 +18,13 @@ When groupvar is provided and found in the phenodata, but the it only has one un
 1. The function returns a warning message saying that the groupvar has only one value  
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitPoisBG.R#L63
 
-When groupvar is provided and found in the phenodata with more than one unique value,   
+When groupvar is provided and found in the phenodata with more than one unique value,     
 1. The function outputs a GeoMx S4 class with length same as length of ROIs, sizefact_sp, in phenoData.  
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitPoisBG.R#L90
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitPoisBG.R#L95
 2. The function outputs a GeoMx S4 class with length same as length of negative probes, featfact_sp, in featureData for each unique slide value. The value is NA for non-negative probes.  
-test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitPoisBG.R#L91  
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitPoisBG.R#L91
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitPoisBG.R#L99
 3. If size_scale="first", sizefact[1]=1  
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitPoisBG.R#L115
 4. If size_scale="sum", sum(sizefact)=1  
@@ -52,47 +55,84 @@ test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833
 When split is FALSE,  
 1. The function outputs a GeoMx S4 class with p values in featureData with length same as length of probes. The p value is NA for negative targets.   
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L41
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L87
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L132
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L177
 2. The function outputs a GeoMx S4 class with score values in featureData with length same as length of targets. The score value is NA for negative probes.   
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L52
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L97
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L142
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L187
 3. All p values are between 0 and 1 (inclusive) for non-negative features.   
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L62
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L107
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L152
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L197
 4. The length of non-NA p values is equal to the number of non-negative probes.   
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L67
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L112
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L157
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L202
 5. The length of non-NA scores values is equal to the number of non-negative probes.   
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L70
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L115
 6. The order of pvalues is the same as scores.   
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L73
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L118
 7. It returns an error without running fitPoisBG.    
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L508
-12. It returns an error if split is TRUE but no corresponding fitPoisBG is called previously.   
+8. It returns an error if split is TRUE but no corresponding fitPoisBG is called previously.   
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L534
 
 When split is TRUE,  
 1. The function outputs a GeoMx S4 class with p values in featureData with length same as length of targets for each unique slide value. The p value is NA for negative probes.  
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L246
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L309
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L373
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L437
 2. The function outputs a GeoMx S4 class with score values in featureData with length same as length of targets for each unique slide value. The score value is NA for negative probes.   
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L260
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L323
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L387
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L450
 3. All p values are between 0 and 1 (inclusive) for non-negative features.   
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L272
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L335
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L399
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L462
 4. The length of non-NA p values is equal to the number of non-negative probes.  
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L278
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L341
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L405
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L468
 5. The length of non-NA scores values is equal to the number of non-negative probes.  
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L291
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L354
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L418
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L481
 6. The order of pvalues is the same as scores.  
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L297
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L360
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L424
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-scoretest.R#L487
 
 
 #### Specs for fitNBth:
 1. Without providing values for features_high, sizefact_BG, threshold_start, the function returns the same value   
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBth.R#L68
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBth.R#L171
 2. The function outputs a GeoMx S4 class with para0 in the experimentData as "NA".   
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBth.R#L74
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBth.R#L178
 3. The function outputs a GeoMx S4 class with para, a matrix of estimated parameters, in the featureData. This matrix has feature_high_fitNBth in columns(same as features_high) and parameters(signal, r) in columns.   
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBth.R#L80
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBth.R#L184
 4. The function outputs sizefact_fitNBth in the phenoData, which is positive, same length as sizefact_BG   
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBth.R#L92
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBth.R#L196
 5. The function outputs threshold in the experimentData. When threshold_fix=TRUE, threshold in the output is the same as threshold_start.   
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBth.R#L98
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBth.R#L202
 
 
 #### Specs for fitPoisthNorm:
@@ -154,40 +194,52 @@ test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-aggreprobe.R#L53
 6. The resulting object shall have the same size of feature names as negative probe names plus non-negative target names.  
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-aggreprobe.R#L65
-
+7. Single probe targets shall be returned without aggregation
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-aggreprobe.R#L73
 
 #### Specs for fitNBthDE:
 1.The function outputs para0, a matrix of estimated parameters in iter=1. This matrix has features_high in the columns and parameters(regression coefficients, threshold, r) in the rows.  Both threshold and r are positive.    
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBthDE.R#L75
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBthDE.R#L238
 2.The function outputs para, a matrix of estimated parameters in iter=2. This matrix has features_all in the columns and parameters(regression coefficients, threshold, r) in the rows.  Both threshold and r are positive.   
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBthDE.R#L114
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBthDE.R#L276
 3.The function outputs sizefact, a vector of size factors, when sizefactrec=FALSE, sizefact is the same as sizefact_start.  
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBthDE.R#L128
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBthDE.R#L290
 
 
 #### Specs for fitNBthmDE:
 1. The function outputs para, a matrix of estimated parameters. This matrix has features_all in the columns and parameters(regression coefficients, threshold, r) in the rows. Both threshold and r are positive.  
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBthmDE.R#L89
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-fitNBthmDE.R#L216
 
 
 #### Specs for coefNBth:
 1. when fullpara=TRUE, the output parameters should be regression coefficients, threshold and r in a list. Both threshold and r are positive.  
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-coefNBth.R#L22
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-coefNBth.R#L57
 2. when fullpara=FALSE, the output parameters should be regression coefficients only in a list  
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-coefNBth.R#L30
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-coefNBth.R#L65
 
 
 #### Specs for contrastNBth:
 1. The function takes in a DE model as an input from fitNBthDE or fitNBthmDE  
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-contrastNBth.R#L19
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-contrastNBth.R#L59
 2. The user input test:statistical test, choose from c("two-sided", ">", "<")   
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-contrastNBth.R#L20
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-contrastNBth.R#L60
 3. In the output list, the p values of '>' and '<' for the same variable/feature should add up to 1   
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-contrastNBth.R#L30
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-contrastNBth.R#L70
 
 
 #### Specs for DENBth:
 1. In the output data.frame, the DE table should not have NA if NAto1=TRUE   
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-DENBth.R#L22
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-DENBth.R#L54
 2. In the output data.frame, the DE table has a column padj when adjp=TRUE   
+test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-DENBth.R#L25
 test: https://github.com/Nanostring-Biostats/GeoDiff/blob/eef13efc1636fd86e3b833c26967d3fb2c350396/tests/testthat/test-DENBth.R#L57
