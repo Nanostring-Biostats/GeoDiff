@@ -6,7 +6,6 @@ Authors@R: c(person("Lei", "Yang", email = "lyang@nanostring.com", role = c("aut
              person("Zhi", "Yang", email = "zyang@nanostring.com", role = c("cre", "aut")))
 Description: A series of statistical models using count generating distributions for background modelling, feature and sample QC, normalization and differential expression analysis on GeoMx RNA data. The application of these methods are demonstrated by example data analysis vignette.
 Imports:
-    magrittr,
     Matrix,
     robust,
     plyr,
