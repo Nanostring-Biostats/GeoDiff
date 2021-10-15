@@ -18,8 +18,8 @@ fitNBthmDE(object, ...)
   sizefact = NULL,
   sizefact_BG = NULL,
   preci1,
-  threshold_mean,
-  preci2,
+  threshold_mean = NULL,
+  preci2 = 10000,
   sizescalebythreshold = FALSE,
   controlRandom = list()
 )
@@ -33,8 +33,8 @@ fitNBthmDE(object, ...)
   sizefact,
   sizefact_BG,
   preci1,
-  threshold_mean,
-  preci2,
+  threshold_mean = NULL,
+  preci2 = 10000,
   sizescalebythreshold = TRUE,
   controlRandom = list()
 )
@@ -60,7 +60,7 @@ fitNBthmDE(object, ...)
 
 \item{threshold_mean}{average background level}
 
-\item{preci2}{precision for the background}
+\item{preci2}{precision for the background, default=10000}
 
 \item{sizescalebythreshold}{whether to scale the size factor, default=TRUE}
 
