@@ -288,8 +288,7 @@ str(NBthDEmod)
 First take a look at the study design. It shows the two levels of region both exist in the same
 patient ID. This indicates the random effect model with random slope would be appropriate, still we
 fit both random intercept model and random slope model to showcase the capability of the mixed model
-function. Both mixed model function calls take quite some time so the model objects are saved and
-can be directly loaded to inspection.
+function. 
 
 Here we subset features_high to speed up DE in later steps as only these 30 genes are modeled.
 
@@ -392,7 +391,7 @@ coefrslope <- coefNBth(NBthmDEmodslope)
 str(coeff)
 ```
 
-If you see an NA it is an extremely INsignificant gene, these p-values can be changed to 1.
+If you see an NA it is an extremely insignificant gene, these p-values can be changed to 1.
 
 
 We can find the baselevel of this DE comparison by looking at the comparison name after coefNBth.
