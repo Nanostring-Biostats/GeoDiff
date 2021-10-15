@@ -349,9 +349,8 @@ setMethod(
         var_ind <- as.numeric(names(n_levels))
 
         prior_type <- match.arg(prior_type)
-
         if (prior_type == "equal") {
-            preci1 <- t(X) %*% preci1con * diag(1, n_sample) %*% X
+            preci1 <- preci1con * t(X) %*% diag(1, n_sample) %*% X
         } else if (prior_type == "contrast") {
             contrvec <- t(rep(1 / n_sample, n_sample)) %*% X
 
