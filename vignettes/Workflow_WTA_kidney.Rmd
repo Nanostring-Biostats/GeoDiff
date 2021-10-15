@@ -102,7 +102,7 @@ summary(pData(kidney)$sizefact)
 summary(fData(kidney)$featfact[fData(kidney)$Negative])
 ```
 
-After running the model, we can diagnose it and see if there are any issues in the dataset. One key metric for Poisson model is the dispersion. When dispersion is big, it is called over-dispersion which often indicate batch effect or large
+After running the model, we can diagnose it and see if there are any issues in the dataset. One key metric for Poisson model is the dispersion. When dispersion is big, it is called over-dispersion which often indicates batch effect or large
 outliers in the data.
 
 ```{r}
@@ -113,7 +113,8 @@ notes(kidney_diag)$disper
 ```
 
 If the dispersion is >2, one of these factors might be present in the data. We can check for outlier
-ROIs. Since the dispersion is within range, this code will not get run.
+ROIs. People can choose to set outliers to be missing values and rerun the Poisson Background model. Since the dispersion is within range here, the model will not get run.
+
 ```{r, eval=FALSE}
 which(assayDataElement(kidney_diag, "low_outlier") == 1, arr.ind = TRUE)
 which(assayDataElement(kidney_diag, "up_outlier") == 1, arr.ind = TRUE)
