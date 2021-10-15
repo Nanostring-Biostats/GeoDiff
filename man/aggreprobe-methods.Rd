@@ -9,7 +9,13 @@
 \usage{
 aggreprobe(object, ...)
 
-\S4method{aggreprobe}{NanoStringGeoMxSet}(object, split, use = c("score", "cor", "both"), ...)
+\S4method{aggreprobe}{NanoStringGeoMxSet}(
+  object,
+  split,
+  use = c("score", "cor", "both"),
+  corcutoff = 0.85,
+  ...
+)
 
 \S4method{aggreprobe}{matrix}(
   object,
@@ -17,6 +23,7 @@ aggreprobe(object, ...)
   featurenames,
   negmod,
   use = c("score", "cor", "both"),
+  corcutoff = 0.85,
   ...
 )
 }
@@ -28,6 +35,8 @@ aggreprobe(object, ...)
 \item{split}{indicator variable on whether it is for multiple slides (Yes, TRUE; No, FALSE)}
 
 \item{use}{the method to determine outliers including score, cor, and both}
+
+\item{corcutoff}{the cutoff value for correlation}
 
 \item{probenames}{vector of names of probe}
 

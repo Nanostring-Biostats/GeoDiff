@@ -134,6 +134,7 @@ notes(kidney_diag)$disper_sp
 
 ## Aggregate function
 
+
 After subsetting, we have a couple probes with 0 counts in all 16 ROIs so we will remove them here.
 
 aggreprobe is a GeoDiff specific probe aggregation. The negative probes do not get aggregated and 
@@ -185,7 +186,6 @@ sum(fData(kidneyPrior)[["pvalues"]] < 1e-3, na.rm = TRUE)
 
 To estimate the signal size factor, we use the fit negative binomial threshold function. This size 
 factor represents technical variation between ROIs like sequencing depth
-
 
 The feature_high_fitNBth labeled genes are ones well above background that will be used in later steps.
 

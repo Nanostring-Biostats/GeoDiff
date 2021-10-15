@@ -11,7 +11,7 @@
 #' @param sizefact_BG size factor for background
 #' @param preci1 precision matrix for regression coefficients
 #' @param threshold_mean average background level
-#' @param preci2 precision for the background
+#' @param preci2 precision for the background, default=10000
 #' @param sizescalebythreshold XXX, default=FALSE
 #' @param controlRandom list of random effect control parameters, default=list()
 #' @param ... additional argument list that might be used
@@ -55,8 +55,8 @@
 #' sc1_scores <- fData(demo_pos)[, "scores"]
 #' names(sc1_scores) <- fData(demo_pos)[, "TargetName"]
 #' features_high <- ((sc1_scores > quantile(sc1_scores, probs = 0.4)) &
-#'    (sc1_scores < quantile(sc1_scores, probs = 0.95))) %>%
-#'     which() %>%
+#'    (sc1_scores < quantile(sc1_scores, probs = 0.95))) |>
+#'     which() |>
 #'     names()
 #' set.seed(123)
 #' demoData <- fitNBth(demoData,
@@ -118,8 +118,8 @@ setMethod(
     "fitNBthmDE", "NanoStringGeoMxSet",
     function(object, form, split, ROIs_high = NULL,
     features_all = NULL, sizefact = NULL, sizefact_BG = NULL,
-    preci1, threshold_mean,
-    preci2, sizescalebythreshold = FALSE, controlRandom = list()) {
+    preci1, threshold_mean = NULL,
+    preci2=10000, sizescalebythreshold = FALSE, controlRandom = list()) {
         fDat <- Biobase::fData(object)
         pDat <- Biobase::pData(object)
 
@@ -152,10 +152,10 @@ setMethod(
 
 
         # calculate probenum for the dataset
-        if (any(grepl("CTA", toupper(Biobase::annotation(object))))) {
+        if ("probenum" %in% fvarLabels(posdat)) {
             probenum <- fData(posdat)[["probenum"]]
         } else {
-            probenum <- rep(1, nrow(posdat))
+            stop("No `probenum` is found. Run `aggreprobe` first.")
         }
         names(probenum) <- rownames(fData(posdat))
 
@@ -261,7 +261,7 @@ setMethod(
 #' @param sizefact_BG size factor for background
 #' @param preci1 precision matrix for regression coefficients
 #' @param threshold_mean average background level
-#' @param preci2 precision for the background
+#' @param preci2 precision for the background, default=10000
 #' @param sizescalebythreshold whether to scale the size factor, default=TRUE
 #' @param controlRandom list of random effect control parameters
 #'
@@ -293,8 +293,8 @@ setMethod(
 setMethod(
     "fitNBthmDE", "matrix",
     function(form, annot, object, probenum = rep(1, NROW(object)),
-    features_all, sizefact, sizefact_BG, preci1, threshold_mean,
-    preci2, sizescalebythreshold = TRUE, controlRandom = list()) {
+    features_all, sizefact, sizefact_BG, preci1, threshold_mean = NULL,
+    preci2=10000, sizescalebythreshold = TRUE, controlRandom = list()) {
         if (is.null(names(probenum))) names(probenum) <- rownames(object)
 
         n_feature <- length(features_all)
