@@ -43,8 +43,6 @@ aggreprobe(object, ...)
 \item{featurenames}{vector of names of features each probe corresponding to}
 
 \item{negmod}{Poisson Background model object for negative probes}
-
-\item{corcutoff}{minimum correlation for accepting probe}
 }
 \value{
 \itemize{
