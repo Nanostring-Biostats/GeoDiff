@@ -33,8 +33,8 @@
 #'
 #' @return if split is FALSE, a valid GeoMx S4 object including the following items
 #' \itemize{
-#'   \item para0, matrix of estimated parameters for iter=1, features in columns and parameters(log2 expression, threshold) in rows, in featureData.
-#'   \item para, matrix of estimated parameters for iter=2, features in columns and parameters(log2 expression, threshold) in rows, in featureData.
+#'   \item para0_norm, matrix of estimated parameters for iter=1, features in columns and parameters(log2 expression, threshold) in rows, in featureData.
+#'   \item para_norm, matrix of estimated parameters for iter=2, features in columns and parameters(log2 expression, threshold) in rows, in featureData.
 #'   \item normmat0, matrix of log2 expression for iter=1, features in columns and log2 expression in rows, in assay slot.
 #'   \item normmat, matrix of log2 expression for iter=2, features in columns and log2 expression in rows, in assay lot.
 #'   \item sizefact_norm, estimated sizefact, in phenoData.
@@ -280,18 +280,18 @@ setMethod(
             )
 
             # para0
-            Biobase::fData(object)[["para0"]] <- matrix(NA,
+            Biobase::fData(object)[["para0_norm"]] <- matrix(NA,
                 nrow = nrow(object), ncol = nrow(result$para0),
                 dimnames = list(Biobase::featureNames(object), paste0("var", seq_len((nrow(result$para0)))))
             )
-            Biobase::fData(object)[["para0"]][colnames(result$para0), ] <- t(result$para0)
+            Biobase::fData(object)[["para0_norm"]][colnames(result$para0), ] <- t(result$para0)
 
             # para
-            Biobase::fData(object)[["para"]] <- matrix(NA,
+            Biobase::fData(object)[["para_norm"]] <- matrix(NA,
                 nrow = nrow(object), ncol = nrow(result$para),
                 dimnames = list(Biobase::featureNames(object), paste0("var", seq_len((nrow(result$para)))))
             )
-            Biobase::fData(object)[["para"]][colnames(result$para), ] <- t(result$para)
+            Biobase::fData(object)[["para_norm"]][colnames(result$para), ] <- t(result$para)
 
             # normmat0
             normmat0_mat <- matrix(NA,

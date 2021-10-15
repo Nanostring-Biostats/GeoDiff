@@ -100,8 +100,8 @@ precision matrix for threshold: preci2}
 \value{
 if split is FALSE, a valid GeoMx S4 object including the following items
 \itemize{
-  \item para0, matrix of estimated parameters for iter=1, features in columns and parameters(log2 expression, threshold) in rows, in featureData.
-  \item para, matrix of estimated parameters for iter=2, features in columns and parameters(log2 expression, threshold) in rows, in featureData.
+  \item para0_norm, matrix of estimated parameters for iter=1, features in columns and parameters(log2 expression, threshold) in rows, in featureData.
+  \item para_norm, matrix of estimated parameters for iter=2, features in columns and parameters(log2 expression, threshold) in rows, in featureData.
   \item normmat0, matrix of log2 expression for iter=1, features in columns and log2 expression in rows, in assay slot.
   \item normmat, matrix of log2 expression for iter=2, features in columns and log2 expression in rows, in assay lot.
   \item sizefact_norm, estimated sizefact, in phenoData.
