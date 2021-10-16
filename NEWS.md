@@ -30,3 +30,9 @@ Revisions
 Revisions
 
 * address reviewer's comments
+
+# GeoDiff 0.99.5
+
+Revisions
+
+* fix platform build/check errors

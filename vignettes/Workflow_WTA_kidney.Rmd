@@ -356,11 +356,11 @@ diff_high <- names(which(abs(NBthDEmod$para[2,names(NBthmDEmodslope$para[2,])]-
 diff_high
 set.seed(123)
 
-NBthmDEmodslope$theta[3, diff_high]
+NBthmDEmodslope$theta[3, "ACADM"]
 
 
 annot <- pData(kidney)
-annot$ACADM <- posdat[diff_high,]
+annot$ACADM <- posdat["ACADM",]
 ```
 
 
