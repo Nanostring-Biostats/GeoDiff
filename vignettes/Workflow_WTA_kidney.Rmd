@@ -42,7 +42,6 @@ First we will load the necessary packages
 ```{r setup, results='hide', warning=FALSE, message=FALSE}
 library(GeoDiff)
 library(dplyr)
-library(pheatmap)
 library(ggplot2)
 library(NanoStringNCTools)
 library(GeomxTools)
