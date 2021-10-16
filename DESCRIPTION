@@ -4,14 +4,16 @@ Title: Count model based differential expression and normalization on GeoMx RNA 
 Version: 0.99.4
 Authors@R: c(person("Lei", "Yang", email = "lyang@nanostring.com", role = c("aut")), 
              person("Zhi", "Yang", email = "zyang@nanostring.com", role = c("cre", "aut")))
-Description: A series of statistical models using count generating distributions for background modelling, feature and sample QC, normalization and differential expression analysis on GeoMx RNA data. The application of these methods are demonstrated by example data analysis vignette.
+Description: A series of statistical models using count generating distributions 
+    for background modelling, feature and sample QC, normalization and differential 
+    expression analysis on GeoMx RNA data. The application of these methods are 
+    demonstrated by example data analysis vignette.
 Imports:
     Matrix,
     robust,
     plyr,
     lme4,
     Rcpp (>= 1.0.4.6), 
-    NanoStringNCTools,
     withr,
     methods,
     graphics,
@@ -26,7 +28,8 @@ Encoding: UTF-8
 Suggests: 
     knitr,
     rmarkdown,
-    dplyr
+    dplyr,
+    NanoStringNCTools
 VignetteBuilder: knitr
 Depends: 
     R (>= 4.1.0),
