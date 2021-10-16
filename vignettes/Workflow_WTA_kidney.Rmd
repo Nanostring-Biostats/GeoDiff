@@ -424,14 +424,14 @@ In this first normalization, we will not split by slide.
 ```{r}
 set.seed(123)
 
-names(kidney@assayData)
+names(assayData(kidney))
 
 kidney <- fitPoisthNorm(object = kidney,
                         ROIs_high = ROIs_high,
                         threshold_mean = bgMean,
                         sizescalebythreshold = TRUE)
 
-names(kidney@assayData)
+names(assayData(kidney))
 
 head(fData(kidney)[,(ncol(fData(kidney))-6):ncol(fData(kidney))])
 
@@ -460,7 +460,7 @@ kidney <- fitPoisthNorm(object = kidney,
                         threshold_mean = bgMean,
                         sizescalebythreshold = TRUE)
 
-names(kidney@assayData)
+names(assayData(kidney))
 
 ```
 
