@@ -7,13 +7,13 @@ test_that("fitPoisthNorm when split = FALSE produces desired results", {
     #### Specs for fitPoisthNorm
     # 1 Without providing values for ROIs_high, features_high, features_all, sizefact_start, sizefact_BG, the function returns the same value
     # 2 user need to set iterations =2 for now
-    # 3 The function outputs a GeoMx S4 class with para0, matrix of estimated parameters, in the featureData.
-    # This matrix para0 has the following structure:
+    # 3 The function outputs a GeoMx S4 class with para0_norm, matrix of estimated parameters, in the featureData.
+    # This matrix para0_norm has the following structure:
     # 3.1) 1 row for each feature (row name). If a feature is not in features_high, all columns will be NA.
     # 3.2) n+1 columns labeled var1, var2, ..., var<n>, var<n+1> where n is the length of ROIs_high elements.
     # 3.3) the n columns will have log2 expression (if feature is in features_high) or NA (otherwise).
     # 3.4) the n+1th column contains the threshold for each feature in features_high and NA otherwise.
-    # 4 The function outputs a GeoMx S4 class with para, matrix of estimated parameters, in the featureData. This matrix para has the following structure:
+    # 4 The function outputs a GeoMx S4 class with para_norm, matrix of estimated parameters, in the featureData. This matrix para_norm has the following structure:
     # 4.1) 1 row for each feature (row name) which is equal to the length of features_all
     # 4.2) n+1 columns labeled var1, var2, ..., var<n>, var<n+1> where n is the length of ROIs_high elements.
     # 4.3) the n columns will have log2 expression.
@@ -133,38 +133,38 @@ test_that("fitPoisthNorm when split = FALSE produces desired results", {
 
     # 3 The function outputs a GeoMx S4 class...
     expect_true(inherits(case1, "NanoStringGeoMxSet"))
-    # ...with para0, matrix of estimated parameters, in the featureData.
-    expect_true("para0" %in% colnames(fData(case1)))
-    expect_true(inherits(fData(case1)$para0, "matrix"))
-    # This matrix para0 has the following structure:
+    # ...with para0_norm, matrix of estimated parameters, in the featureData.
+    expect_true("para0_norm" %in% colnames(fData(case1)))
+    expect_true(inherits(fData(case1)$para0_norm, "matrix"))
+    # This matrix para0_norm has the following structure:
     # 3.1) 1 row for each feature (row name). If a feature is not in features_high, all columns will be NA.
-    para0 <- fData(case1)$para0
-    expect_true(nrow(para0) == dim(case1)[1])
-    expect_true(all(is.na(para0[setdiff(row.names(para0), features_high), ]))) # i.e., get non-features_high rows and check if all are NAs
+    para0_norm <- fData(case1)$para0_norm
+    expect_true(nrow(para0_norm) == dim(case1)[1])
+    expect_true(all(is.na(para0_norm[setdiff(row.names(para0_norm), features_high), ]))) # i.e., get non-features_high rows and check if all are NAs
     # 3.2) n+1 columns labeled var1, var2, ..., var<n>, var<n+1> where n is the length of ROIs_high elements.
-    expect_true(all(colnames(para0) == paste0("var", 1:(length(high_ROIs) + 1))))
+    expect_true(all(colnames(para0_norm) == paste0("var", 1:(length(high_ROIs) + 1))))
     # 3.3) the n columns will have log2 expression (if feature is in features_high) or NA (otherwise).
-    expect_false(any(is.na(para0[features_high, 1:length(high_ROIs)])))
-    expect_true(all(is.na(para0[setdiff(row.names(para0), features_high), 1:length(high_ROIs)])))
+    expect_false(any(is.na(para0_norm[features_high, 1:length(high_ROIs)])))
+    expect_true(all(is.na(para0_norm[setdiff(row.names(para0_norm), features_high), 1:length(high_ROIs)])))
     # 3.4) the n+1th column contains the threshold for each feature in features_high and NA otherwise.
-    expect_false(any(is.na(para0[features_high, (length(high_ROIs) + 1)])))
-    expect_true(all(is.na(para0[setdiff(row.names(para0), features_high), (length(high_ROIs) + 1)])))
+    expect_false(any(is.na(para0_norm[features_high, (length(high_ROIs) + 1)])))
+    expect_true(all(is.na(para0_norm[setdiff(row.names(para0_norm), features_high), (length(high_ROIs) + 1)])))
 
     # 4 The function outputs a GeoMx S4 class...
     # (tested above)
-    # with para, matrix of estimated parameters, in the featureData.
-    expect_true("para" %in% colnames(fData(case1)))
-    expect_true(inherits(fData(case1)$para, "matrix"))
-    # This matrix para has the following structure:
+    # with para_norm, matrix of estimated parameters, in the featureData.
+    expect_true("para_norm" %in% colnames(fData(case1)))
+    expect_true(inherits(fData(case1)$para_norm, "matrix"))
+    # This matrix para_norm has the following structure:
     # 4.1) 1 row for each feature (row name) which is equal to the length of features_all
-    para <- fData(case1)$para
-    expect_true(nrow(para) == dim(case1)[1])
+    para_norm <- fData(case1)$para_norm
+    expect_true(nrow(para_norm) == dim(case1)[1])
     # 4.2) n+1 columns labeled var1, var2, ..., var<n>, var<n+1> where n is the length of ROIs_high elements.
-    expect_true(all(colnames(para) == paste0("var", 1:(length(high_ROIs) + 1))))
+    expect_true(all(colnames(para_norm) == paste0("var", 1:(length(high_ROIs) + 1))))
     # 4.3) the n columns will have log2 expression.
-    expect_false(any(is.na(para[features_all, 1:length(high_ROIs)])))
+    expect_false(any(is.na(para_norm[features_all, 1:length(high_ROIs)])))
     # 4.4) the n+1th column contains the threshold for each feature in features_all.
-    expect_false(any(is.na(para[features_all, (length(high_ROIs) + 1)])))
+    expect_false(any(is.na(para_norm[features_all, (length(high_ROIs) + 1)])))
 
     # 5 The function outputs a column called conv0 in featureData, with values in [NA, 0] and length of 0s are the same as the length of features_high.
     expect_true("conv0" %in% colnames(fData(case1)))
@@ -295,8 +295,8 @@ test_that("fitPoisthNorm when split = TRUE produces desired results", {
     #    the results for a given grouping/facet of the data should match the fitPoisthNorm
     #    results when an object is subset down to a single slide. Specifically, the following
     #    should be true:
-    #   1.1 For a given element in groupvar, the corresponding column in the "threshold0" matrix, which is within featureData, should be identical to the single-patient case's fetureData's para0[,n+1]th column.
-    #   1.2 For a given element in groupvar, the corresponding column in the "threshold" matrix, which is within featureData, should be identical to the single-patient case's fetureData's para[,n+1]th column.
+    #   1.1 For a given element in groupvar, the corresponding column in the "threshold0" matrix, which is within featureData, should be identical to the single-patient case's fetureData's para0_norm[,n+1]th column.
+    #   1.2 For a given element in groupvar, the corresponding column in the "threshold" matrix, which is within featureData, should be identical to the single-patient case's fetureData's para_norm[,n+1]th column.
     #   1.3 For a given element in groupvar, the normalized matrix "normmat0_sp", in the assayData slot, should be identical to that element's "normmat0" matrix, also in the assayData slot, for all samples within that element. In other words, the matrix within the "single slide" results (normmat0) should be a subset of the "multiple slide" results (normmat_sp).
     #   1.4 For a given element in groupvar, the normaized matrix "normmat_sp", in the assayData slot, should be identical to that element's "normmat" matrix, also in the assayData slot, for all samples within that element. In other words, the matrix within the "single slide" results (normmat) should be a subset of the "multiple slide" results (normmat_sp).
     #   1.5 For a given element in groupvar, the vector of sizefact, located in phenoData's sizefact_norm column, is identical to that element's sizefact_norm vector from running fitPoisthNorm (i.e., single grouping case).
@@ -412,20 +412,20 @@ test_that("fitPoisthNorm when split = TRUE produces desired results", {
 
     ## Run tests to compare
     # 2.1 For a given element in groupvar, the corresponding column in the "threshold0" matrix, which is within featureData,
-    #     should be identical to the single-patient case's fetureData's para0[,n+1]th column.
+    #     should be identical to the single-patient case's fetureData's para0_norm[,n+1]th column.
     threshold0_sp_mat <- fData(case_sp)$threshold0 # pull out the matrix from fData(case_sp)
     sp_compare <- threshold0_sp_mat[, which(colnames(threshold0_sp_mat) == unique_pts[1])] # i.e., pt1 pulled out of sp
-    pt1_compare <- fData(case_pt1)$para0[, length(high_ROIs_pt1) + 1]
+    pt1_compare <- fData(case_pt1)$para0_norm[, length(high_ROIs_pt1) + 1]
     expect_true(identical(sp_compare, pt1_compare))
     rm(threshold0_sp_mat)
     rm(sp_compare)
     rm(pt1_compare)
 
     # 2.2 For a given element in groupvar, the corresponding column in the "threshold" matrix, which is within featureData,
-    #     should be identical to the single-patient case's fetureData's para[,n+1]th column.
+    #     should be identical to the single-patient case's fetureData's para_norm[,n+1]th column.
     threshold_sp_mat <- fData(case_sp)$threshold # pull out the matrix from fData(case_sp)
     sp_compare <- threshold_sp_mat[, which(colnames(threshold_sp_mat) == unique_pts[1])] # i.e., pt1 pulled out of sp
-    pt1_compare <- fData(case_pt1)$para[, length(high_ROIs_pt1) + 1]
+    pt1_compare <- fData(case_pt1)$para_norm[, length(high_ROIs_pt1) + 1]
     expect_true(identical(sp_compare, pt1_compare))
     rm(threshold_sp_mat)
     rm(sp_compare)
