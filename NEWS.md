@@ -24,3 +24,9 @@ Revisions
 Revisions
 
 * remove seed
+
+# GeoDiff 0.99.4
+
+Revisions
+
+* address reviewer's comments
