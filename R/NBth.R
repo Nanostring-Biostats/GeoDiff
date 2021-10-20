@@ -148,6 +148,7 @@ setMethod(
         if (is.null(threshold_start)) {
             message(sprintf("`threshold_start` is missing. The default value is estimated based on fitPoisBG results with %s.", 
                             ifelse(isTRUE(split), "multiple slides", "a single slide")))
+            thmean <- unname(thmean)
             threshold_start <- thmean
         }
 
