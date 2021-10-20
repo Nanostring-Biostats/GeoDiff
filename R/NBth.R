@@ -147,7 +147,7 @@ setMethod(
         # setting default value for sizefact_start
         if (is.null(threshold_start)) {
             message(sprintf("`threshold_start` is missing. The default value is estimated based on fitPoisBG results with %s.", 
-                            ifelse(isFALSE(split), "a single slide", "multiple slides")))
+                            ifelse(isTRUE(split), "multiple slides", "a single slide")))
             threshold_start <- thmean
         }
 

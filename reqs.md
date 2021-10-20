@@ -55,6 +55,7 @@ specifications: https://github.com/Nanostring-Biostats/GeoDiff/blob/main/specs.m
 
 #### Reqs for fitNBth
 - The user input a GeoMx S4 class
+- The user input an indicator variable on whether using results from multiple slides: split
 - The user input vector of high features names: features_high (If NULL, the default value is calculated within the function)
 - The user input size factor for background: sizefact_BG (If NULL, the default value is calculated within the function)
 - The user input starting size factor: sizefact_start(default=sizefactor_BG)
