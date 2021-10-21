@@ -36,3 +36,9 @@ Revisions
 Revisions
 
 * fix platform build/check errors
+
+# GeoDiff 0.99.6
+
+Revisions
+
+* add `split` to `fitNBth` function
