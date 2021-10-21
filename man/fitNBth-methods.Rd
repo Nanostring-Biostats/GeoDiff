@@ -11,6 +11,7 @@ fitNBth(object, ...)
 
 \S4method{fitNBth}{NanoStringGeoMxSet}(
   object,
+  split = TRUE,
   features_high = NULL,
   sizefact_BG = NULL,
   sizefact_start = sizefact_BG,
@@ -44,6 +45,8 @@ fitNBth(object, ...)
 \item{object}{count matrix with features in rows and samples in columns}
 
 \item{...}{additional argument list that might be used}
+
+\item{split}{indicator variable on whether it is for multiple slides (Yes, TRUE; No, FALSE)}
 
 \item{features_high}{subset of features which are well above the background}
 

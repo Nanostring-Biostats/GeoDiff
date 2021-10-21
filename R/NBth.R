@@ -3,6 +3,7 @@
 #' Estimate the signal size factor for features above the background
 #'
 #' @param object a valid GeoMx S4 object
+#' @param split indicator variable on whether it is for multiple slides (Yes, TRUE; No, FALSE)
 #' @param features_high subset of features which are well above the background
 #' @param sizefact_BG size factors for the background
 #' @param sizefact_start initial value for size factors
@@ -80,7 +81,7 @@ setGeneric("fitNBth",
 #' @aliases fitNBth,NanoStringGeoMxSet-method
 setMethod(
     "fitNBth", "NanoStringGeoMxSet",
-    function(object,
+    function(object, split = TRUE, 
     features_high = NULL,
     sizefact_BG = NULL, sizefact_start = sizefact_BG,
     size_scale = c("sum", "first"),
@@ -145,6 +146,9 @@ setMethod(
 
         # setting default value for sizefact_start
         if (is.null(threshold_start)) {
+            message(sprintf("`threshold_start` is missing. The default value is estimated based on fitPoisBG results with %s.", 
+                            ifelse(isTRUE(split), "multiple slides", "a single slide")))
+            thmean <- unname(thmean)
             threshold_start <- thmean
         }
 
@@ -181,7 +185,6 @@ setMethod(
                 stop("No information is found to determine the data type (CTA or WTA).")
             }
         }
-
         result <- fitNBth(
             object = countmat[features_high, ],
             probenum = probenum,
