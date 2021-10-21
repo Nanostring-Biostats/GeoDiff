@@ -46,7 +46,7 @@ test_that("fitNBth produces desired results, CTA", {
     case1 <- fitNBth(NSGMS,
         features_high = features_high,
         sizefact_BG = NSGMS_neg$sizefact_sp,
-        threshold_start = thmean,
+        threshold_start = unname(thmean),
         iterations = 5,
         start_para = c(200, 1),
         lower_sizefact = 0,
@@ -58,6 +58,7 @@ test_that("fitNBth produces desired results, CTA", {
     # expect same results without specifying the values.
     set.seed(123)
     case1_df <- fitNBth(NSGMS,
+        split = TRUE,
         iterations = 5,
         start_para = c(200, 1),
         lower_sizefact = 0,
@@ -153,7 +154,7 @@ test_that("fitNBth produces desired results, WTA", {
     case1 <- fitNBth(NSGMS,
         features_high = genes_high,
         sizefact_BG = NSGMS_neg$sizefact_sp,
-        threshold_start = thmean,
+        threshold_start = unname(thmean),
         iterations = 5,
         start_para = c(200, 1),
         lower_sizefact = 0,
@@ -164,6 +165,7 @@ test_that("fitNBth produces desired results, WTA", {
     # expect same results without specifying the values.
     set.seed(123)
     case1_df <- fitNBth(NSGMS,
+        split = TRUE,
         iterations = 5,
         start_para = c(200, 1),
         lower_sizefact = 0,
