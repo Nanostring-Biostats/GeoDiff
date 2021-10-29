@@ -217,7 +217,6 @@ setMethod(
                 scores <- apply(object, 1, function(x) sum((x - sizefact * featfact0) / deno) / sqrt(sum(sizefact / deno)))
             } else {
                 if (is.null(names(probenum))) names(probenum) <- rownames(object)
-
                 scores <- sapply(
                     names(probenum),
                     function(feat) {
@@ -229,7 +228,7 @@ setMethod(
                 )
             }
         }
-
+        
         pvalues <- pnorm(scores, lower.tail = FALSE)
 
         return(list(
