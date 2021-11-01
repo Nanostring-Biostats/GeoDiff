@@ -43,6 +43,12 @@ Revisions
 
 * add `split` to `fitNBth` function
 
-# GeoDiff 0.99.7
+# GeoDiff 1.1.0
+
+* accepted by Bioconductor 
+
+# GeoDiff 1.1.1
 
 * change default values in `fitNBth` and `NBthmDE` wrapper functions to be consistent
+
+
