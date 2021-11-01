@@ -119,7 +119,7 @@ setMethod(
     function(object, form, split, ROIs_high = NULL,
     features_all = NULL, sizefact = NULL, sizefact_BG = NULL,
     preci1, threshold_mean = NULL,
-    preci2=10000, sizescalebythreshold = FALSE, controlRandom = list()) {
+    preci2=10000, sizescalebythreshold = TRUE, controlRandom = list()) {
         fDat <- Biobase::fData(object)
         pDat <- Biobase::pData(object)
 

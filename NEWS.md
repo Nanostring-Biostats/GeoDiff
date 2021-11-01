@@ -42,3 +42,7 @@ Revisions
 Revisions
 
 * add `split` to `fitNBth` function
+
+# GeoDiff 0.99.7
+
+* change default values in `fitNBth` and `NBthmDE` wrapper functions to be consistent
