@@ -51,4 +51,7 @@ Revisions
 
 * change default values in `fitNBth` and `NBthmDE` wrapper functions to be consistent
 
+# GeoDiff 1.1.2
+
+* transfer maintainership
 
