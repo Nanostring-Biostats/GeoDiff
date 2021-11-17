@@ -1,4 +1,4 @@
-#' Poisson threshold model based normalization-log2 transformation for single slide or for multiple slides
+ #' Poisson threshold model based normalization-log2 transformation for single slide or for multiple slides
 #'
 #' Poisson threshold model based normalization-log2 transformation for single slide or for multiple slides
 #'

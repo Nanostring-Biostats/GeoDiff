@@ -2,46 +2,46 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 NBthDE_paraOptfeat <- function(X, y, alpha0, alpha, preci1, threshold0, preci2, x0, calhes) {
-    .Call(`_GeoDiff_NBthDE_paraOptfeat`, X, y, alpha0, alpha, preci1, threshold0, preci2, x0, calhes)
+    .Call('_GeoDiff_NBthDE_paraOptfeat', PACKAGE = 'GeoDiff', X, y, alpha0, alpha, preci1, threshold0, preci2, x0, calhes)
 }
 
 NBthDE_paraOptall <- function(Y, X, alpha0, alpha, preci1, threshold0, preci2, x0, sizescale, calhes) {
-    .Call(`_GeoDiff_NBthDE_paraOptall`, Y, X, alpha0, alpha, preci1, threshold0, preci2, x0, sizescale, calhes)
+    .Call('_GeoDiff_NBthDE_paraOptall', PACKAGE = 'GeoDiff', Y, X, alpha0, alpha, preci1, threshold0, preci2, x0, sizescale, calhes)
 }
 
 NBthmDE_grad <- function(y, X, Z, x, u, alpha0, alpha, preci1, preci2, threshold0) {
-    .Call(`_GeoDiff_NBthmDE_grad`, y, X, Z, x, u, alpha0, alpha, preci1, preci2, threshold0)
+    .Call('_GeoDiff_NBthmDE_grad', PACKAGE = 'GeoDiff', y, X, Z, x, u, alpha0, alpha, preci1, preci2, threshold0)
 }
 
 NBthmDE_gradM <- function(y, X, Z, x, u_mat, alpha0, alpha, preci1, preci2, threshold0) {
-    .Call(`_GeoDiff_NBthmDE_gradM`, y, X, Z, x, u_mat, alpha0, alpha, preci1, preci2, threshold0)
+    .Call('_GeoDiff_NBthmDE_gradM', PACKAGE = 'GeoDiff', y, X, Z, x, u_mat, alpha0, alpha, preci1, preci2, threshold0)
 }
 
 condi_u <- function(Tem, ind, u, temp_size) {
-    .Call(`_GeoDiff_condi_u`, Tem, ind, u, temp_size)
+    .Call('_GeoDiff_condi_u', PACKAGE = 'GeoDiff', Tem, ind, u, temp_size)
 }
 
 NBthmDE_mh <- function(Tem, u, X, Z, y, alpha0, alpha, x, nmh) {
-    .Call(`_GeoDiff_NBthmDE_mh`, Tem, u, X, Z, y, alpha0, alpha, x, nmh)
+    .Call('_GeoDiff_NBthmDE_mh', PACKAGE = 'GeoDiff', Tem, u, X, Z, y, alpha0, alpha, x, nmh)
 }
 
 NBthmDE_fparaOptfeat <- function(X, Z, y, alpha0, alpha, preci1, threshold0, preci2, u_mat, x0, calhes) {
-    .Call(`_GeoDiff_NBthmDE_fparaOptfeat`, X, Z, y, alpha0, alpha, preci1, threshold0, preci2, u_mat, x0, calhes)
+    .Call('_GeoDiff_NBthmDE_fparaOptfeat', PACKAGE = 'GeoDiff', X, Z, y, alpha0, alpha, preci1, threshold0, preci2, u_mat, x0, calhes)
 }
 
 NBthmDE_uOpt <- function(u0, X, Z, y, alpha0, alpha, x, preciu, calhes) {
-    .Call(`_GeoDiff_NBthmDE_uOpt`, u0, X, Z, y, alpha0, alpha, x, preciu, calhes)
+    .Call('_GeoDiff_NBthmDE_uOpt', PACKAGE = 'GeoDiff', u0, X, Z, y, alpha0, alpha, x, preciu, calhes)
 }
 
 PoisthNorm_paraOptfeat <- function(y, X, alpha0, alpha, preci1, preci2, threshold0, calhes) {
-    .Call(`_GeoDiff_PoisthNorm_paraOptfeat`, y, X, alpha0, alpha, preci1, preci2, threshold0, calhes)
+    .Call('_GeoDiff_PoisthNorm_paraOptfeat', PACKAGE = 'GeoDiff', y, X, alpha0, alpha, preci1, preci2, threshold0, calhes)
 }
 
 PoisthNorm_paraOptall <- function(Y, X, alpha0, alpha, preci1, threshold0, preci2, sizescale, calhes) {
-    .Call(`_GeoDiff_PoisthNorm_paraOptall`, Y, X, alpha0, alpha, preci1, threshold0, preci2, sizescale, calhes)
+    .Call('_GeoDiff_PoisthNorm_paraOptall', PACKAGE = 'GeoDiff', Y, X, alpha0, alpha, preci1, threshold0, preci2, sizescale, calhes)
 }
 
 dnbinom_mu_vec <- function(x, sz, mu, lg) {
-    .Call(`_GeoDiff_dnbinom_mu_vec`, x, sz, mu, lg)
+    .Call('_GeoDiff_dnbinom_mu_vec', PACKAGE = 'GeoDiff', x, sz, mu, lg)
 }
 
