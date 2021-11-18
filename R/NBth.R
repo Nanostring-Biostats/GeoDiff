@@ -85,9 +85,9 @@ setMethod(
     sizefact_BG = NULL, sizefact_start = sizefact_BG,
     size_scale = c("sum", "first"),
     threshold_start = NULL, threshold_fix = FALSE,
-    tol = 1e-3, iterations = 5,
+    tol = 1e-7, iterations = 8,
     start_para = c(threshold_start, 0.5),
-    lower_sizefact = 1e-2, lower_threshold = 1e-2) {
+    lower_sizefact = 0, lower_threshold = threshold_start / 5) {
         # check on tol
         tol <- as.double(tol)
         stopifnot(length(tol) == 1)
@@ -273,7 +273,7 @@ setMethod(
 #' @aliases fitNBth,matrix-method
 setMethod(
     "fitNBth", "matrix",
-    function(object, features_high, probenum, sizefact_BG, sizefact_start = sizefact_BG, size_scale = c("sum", "first"), threshold_start, threshold_fix = FALSE, tol = 1e-3, iterations = 5,
+    function(object, features_high, probenum, sizefact_BG, sizefact_start = sizefact_BG, size_scale = c("sum", "first"), threshold_start, threshold_fix = FALSE, tol = 1e-7, iterations = 8,
     start_para = c(threshold_start, 1), lower_sizefact = 0, lower_threshold = threshold_start / 5) {
         size_scale <- match.arg(size_scale)
         sizefact0 <- sizefact <- sizefact_start
@@ -314,14 +314,16 @@ setMethod(
 
             message(sprintf("Iteration = %s, squared error = %s", iter, sum((sizefact - sizefact0)^2)))
 
+
             if (sum((sizefact - sizefact0)^2) < tol) break
 
             sizefact0 <- sizefact
+            
         }
         message("Model converged.")
 
         rownames(para) <- c("signal", "r")
-
+        
         return(list(
             para0 = NA,
             para = para,

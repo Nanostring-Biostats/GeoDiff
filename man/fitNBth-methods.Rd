@@ -18,11 +18,11 @@ fitNBth(object, ...)
   size_scale = c("sum", "first"),
   threshold_start = NULL,
   threshold_fix = FALSE,
-  tol = 0.001,
-  iterations = 5,
+  tol = 1e-07,
+  iterations = 8,
   start_para = c(threshold_start, 0.5),
-  lower_sizefact = 0.01,
-  lower_threshold = 0.01
+  lower_sizefact = 0,
+  lower_threshold = threshold_start/5
 )
 
 \S4method{fitNBth}{matrix}(
@@ -34,8 +34,8 @@ fitNBth(object, ...)
   size_scale = c("sum", "first"),
   threshold_start,
   threshold_fix = FALSE,
-  tol = 0.001,
-  iterations = 5,
+  tol = 1e-07,
+  iterations = 8,
   start_para = c(threshold_start, 1),
   lower_sizefact = 0,
   lower_threshold = threshold_start/5
