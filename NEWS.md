@@ -55,3 +55,6 @@ Revisions
 
 * transfer maintainership
 
+# GeoDiff 1.1.3
+
+* implement code optimizations (mostly RFast and matrix methods) to speed up execution. Added error handling to Rcpp code.
