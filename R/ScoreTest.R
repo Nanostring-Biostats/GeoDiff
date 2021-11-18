@@ -181,88 +181,143 @@ setMethod(
 #' @rdname BGScoreTest-methods
 #' @aliases BGScoreTest,matrix-method
 
-BGScoreTest_function = function(object, BGmod, adj = 1, probenum, removeoutlier = FALSE, useprior = FALSE) {
-  if (removeoutlier == TRUE) {
-    boxobj <- graphics::boxplot(BGmod$featfact, plot = FALSE)
-    
-    if (length(boxobj$out) > 0) {
-      featfact <- BGmod$featfact[-which(BGmod$featfact %in% boxobj$out)]
+setMethod(
+  "BGScoreTest", "dgCMatrix",
+  function(object, BGmod, adj = 1, probenum, removeoutlier = FALSE, useprior = FALSE) {
+    if (removeoutlier == TRUE) {
+      boxobj <- graphics::boxplot(BGmod$featfact, plot = FALSE)
+      
+      if (length(boxobj$out) > 0) {
+        featfact <- BGmod$featfact[-which(BGmod$featfact %in% boxobj$out)]
+      } else {
+        featfact <- BGmod$featfact
+      }
+      message(sprintf("%s negative probes are removed prior to the score test.", length(boxobj$out)))
     } else {
       featfact <- BGmod$featfact
     }
-    message(sprintf("%s negative probes are removed prior to the score test.", length(boxobj$out)))
-  } else {
-    featfact <- BGmod$featfact
-  }
-  
-  sizefact <- BGmod$sizefact
-  
-  if (useprior == FALSE) {
-    if (missing(probenum)) {
-      prodfact <- sizefact * mean(adj * featfact)
-      
-      scores <- apply(object, 1, function(x) sum(x - prodfact) / sqrt(sum(prodfact)))
+    
+    sizefact <- BGmod$sizefact
+    
+    if (useprior == FALSE) {
+      if (missing(probenum)) {
+        prodfact <- sizefact * mean(adj * featfact)
+        
+        scores <- apply(object, 1, function(x) sum(x - prodfact) / sqrt(sum(prodfact)))
+      } else {
+        if (is.null(names(probenum))) names(probenum) <- rownames(object)
+        scores <- sapply(
+          names(probenum),
+          function(feat) {
+            prodfact <- sizefact * mean(probenum[feat] * featfact)
+            sum(object[feat, ] - prodfact) / sqrt(sum(prodfact))
+          }
+        )
+      }
     } else {
-      if (is.null(names(probenum))) names(probenum) <- rownames(object)
-      scores <- sapply(
-        names(probenum),
-        function(feat) {
-          prodfact <- sizefact * mean(probenum[feat] * featfact)
-          sum(object[feat, ] - prodfact) / sqrt(sum(prodfact))
-        }
-      )
+      if (missing(probenum)) {
+        featfact0 <- mean(adj * featfact)
+        sigma <- var(adj * featfact) / (mean(adj * featfact))^2
+        deno <- (sizefact * sigma * featfact0 + 1) * featfact0
+        new_object_numerator = ((object - sizefact * featfact0))
+        new_object_denominator = 1/(sqrt(sum(sizefact / deno))*deno)
+        new_object_denominator = as(new_object_denominator, "sparseMatrix") 
+        quotient = new_object_numerator%*%new_object_denominator
+        scores_ned = quotient[,1]
+        names(scores_ned) = rownames(object)
+        scores = scores_ned
+        
+      } else {
+        if (is.null(names(probenum))) names(probenum) <- rownames(object)
+        
+        scores <- sapply(
+          names(probenum),
+          function(feat) {
+            featfact0 <- mean(probenum[feat] * featfact)
+            sigma <- var(probenum[feat] * featfact) / (mean(probenum[feat] * featfact))^2
+            deno <- (sizefact * sigma * featfact0 + 1) * featfact0
+            sum((object[feat, ] - sizefact * featfact0) / deno) / sqrt(sum(sizefact / deno))
+          }
+        )
+      }
     }
-  } else {
-    if (missing(probenum)) {
-      featfact0 <- mean(adj * featfact)
-      sigma <- var(adj * featfact) / (mean(adj * featfact))^2
-      deno <- (sizefact * sigma * featfact0 + 1) * featfact0
-      ### focus here!!! - issue with losing names attached to data... 
-      #scores <- apply(object, 1, function(x) sum((x - sizefact * featfact0) / deno) / sqrt(sum(sizefact / deno)))
-      new_object_numerator = ((object - sizefact * featfact0))
-      new_object_denominator = 1/(sqrt(sum(sizefact / deno))*deno)
-      new_object_denominator = as(new_object_denominator, "sparseMatrix") 
-   
-      # print(NROW(new_object_numerator))
-      # print(NCOL(new_object_numerator))
-      # print(NROW(new_object_denominator))
-      # print(NCOL(new_object_denominator))
-      quotient = new_object_numerator%*%new_object_denominator
-      # print(NROW(quotient))
-      # print(NCOL(quotient))
-      scores_ned = quotient[,1]
-      names(scores_ned) = rownames(object)
-      scores = scores_ned
-      #print(scores[[993]])
-      # print(typeof(scores_ned))
-      
-    } else {
-      if (is.null(names(probenum))) names(probenum) <- rownames(object)
-      
-      scores <- sapply(
-        names(probenum),
-        function(feat) {
-          featfact0 <- mean(probenum[feat] * featfact)
-          sigma <- var(probenum[feat] * featfact) / (mean(probenum[feat] * featfact))^2
-          deno <- (sizefact * sigma * featfact0 + 1) * featfact0
-          sum((object[feat, ] - sizefact * featfact0) / deno) / sqrt(sum(sizefact / deno))
-        }
-      )
-    }
+    
+    pvalues <- pnorm(scores, lower.tail = FALSE)
+    
+    return(list(
+      pvalues = pvalues,
+      scores = scores
+    ))
   }
-  
-  pvalues <- pnorm(scores, lower.tail = FALSE)
-  
-  return(list(
-    pvalues = pvalues,
-    scores = scores
-  ))
-}
-setMethod(
-  "BGScoreTest", "dgCMatrix",BGScoreTest_function
 )
 setMethod(
-  "BGScoreTest", "matrix",BGScoreTest_function
+  "BGScoreTest", "matrix",
+  function(object, BGmod, adj = 1, probenum, removeoutlier = FALSE, useprior = FALSE) {
+    if (removeoutlier == TRUE) {
+      boxobj <- graphics::boxplot(BGmod$featfact, plot = FALSE)
+      
+      if (length(boxobj$out) > 0) {
+        featfact <- BGmod$featfact[-which(BGmod$featfact %in% boxobj$out)]
+      } else {
+        featfact <- BGmod$featfact
+      }
+      message(sprintf("%s negative probes are removed prior to the score test.", length(boxobj$out)))
+    } else {
+      featfact <- BGmod$featfact
+    }
+    
+    sizefact <- BGmod$sizefact
+    
+    if (useprior == FALSE) {
+      if (missing(probenum)) {
+        prodfact <- sizefact * mean(adj * featfact)
+        
+        scores <- apply(object, 1, function(x) sum(x - prodfact) / sqrt(sum(prodfact)))
+      } else {
+        if (is.null(names(probenum))) names(probenum) <- rownames(object)
+        scores <- sapply(
+          names(probenum),
+          function(feat) {
+            prodfact <- sizefact * mean(probenum[feat] * featfact)
+            sum(object[feat, ] - prodfact) / sqrt(sum(prodfact))
+          }
+        )
+      }
+    } else {
+      if (missing(probenum)) {
+        featfact0 <- mean(adj * featfact)
+        sigma <- var(adj * featfact) / (mean(adj * featfact))^2
+        deno <- (sizefact * sigma * featfact0 + 1) * featfact0
+        new_object_numerator = ((object - sizefact * featfact0))
+        new_object_denominator = 1/(sqrt(sum(sizefact / deno))*deno)
+        new_object_denominator = as(new_object_denominator, "sparseMatrix") 
+        quotient = new_object_numerator%*%new_object_denominator
+        scores_ned = quotient[,1]
+        names(scores_ned) = rownames(object)
+        scores = scores_ned
+        
+      } else {
+        if (is.null(names(probenum))) names(probenum) <- rownames(object)
+        
+        scores <- sapply(
+          names(probenum),
+          function(feat) {
+            featfact0 <- mean(probenum[feat] * featfact)
+            sigma <- var(probenum[feat] * featfact) / (mean(probenum[feat] * featfact))^2
+            deno <- (sizefact * sigma * featfact0 + 1) * featfact0
+            sum((object[feat, ] - sizefact * featfact0) / deno) / sqrt(sum(sizefact / deno))
+          }
+        )
+      }
+    }
+    
+    pvalues <- pnorm(scores, lower.tail = FALSE)
+    
+    return(list(
+      pvalues = pvalues,
+      scores = scores
+    ))
+  }
 )
 
 #' Testing for features above the background, multiple slides case
