@@ -20,7 +20,7 @@ fitNBthmDE(object, ...)
   preci1,
   threshold_mean = NULL,
   preci2 = 10000,
-  sizescalebythreshold = FALSE,
+  sizescalebythreshold = TRUE,
   controlRandom = list()
 )
 

@@ -265,6 +265,7 @@ setMethod(
     } else {
       featfact <- BGmod$featfact
     }
+<<<<<<< HEAD
     
     sizefact <- BGmod$sizefact
     
@@ -283,6 +284,21 @@ setMethod(
           }
         )
       }
+=======
+  } else {
+    if (missing(probenum)) {
+      featfact0 <- mean(adj * featfact)
+      sigma <- var(adj * featfact) / (mean(adj * featfact))^2
+      deno <- (sizefact * sigma * featfact0 + 1) * featfact0
+      new_object_numerator = ((object - sizefact * featfact0))
+      new_object_denominator = 1/(sqrt(sum(sizefact / deno))*deno)
+      new_object_denominator = as(new_object_denominator, "sparseMatrix") 
+      quotient = new_object_numerator%*%new_object_denominator
+      scores_ned = quotient[,1]
+      names(scores_ned) = rownames(object)
+      scores = scores_ned
+      
+>>>>>>> 08f8f668ef7a3dfbff8815671dbe49115abd0340
     } else {
       if (missing(probenum)) {
         featfact0 <- mean(adj * featfact)
