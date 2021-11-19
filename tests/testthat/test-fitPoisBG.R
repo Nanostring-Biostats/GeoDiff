@@ -24,7 +24,7 @@ test_that("fitPoisBG returns a well-formatted geomxset object", {
     expect_true(all(is.na(fData(res)$featfact[fData(res)$featfact == "Endogenous"])))
     expect_identical(!is.na(fData(res)$featfact), fData(res)$CodeClass == "Negative")
 })
-test_that("do a thing",{
+test_that("fitPoisBG functions with no errors with dgCMatrix",{
   
   data("demoData")
   negdat <- demoData[which(Biobase::fData(demoData)$CodeClass == "Negative"), ]
@@ -34,11 +34,17 @@ test_that("do a thing",{
     object = countmat,
     iterations = 10,
     tol = 1e-3,
-    size_scale = "sum")
+    size_scale = "first")
   demoData[["sizefact"]] <- result$sizefact[Biobase::sampleNames(demoData)]
   Biobase::fData(demoData)[["featfact"]] <- NA
   Biobase::fData(demoData)[["featfact"]][match(names(result$featfact), Biobase::featureNames(demoData), nomatch = 0)] <- result$featfact
   demoData <- aggreprobe(demoData, use = "cor")
+  expect_true(class(demoData) == "NanoStringGeoMxSet")
+  expect_true(nrow(phenoData(demoData)) == nrow(phenoData(demoData)))
+  expect_true(nrow(featureData(demoData)) == nrow(featureData(demoData)))
+  # 1 The function outputs a GeoMx S4 class with length same as length of ROIs, sizefact, in phenoData.
+  expect_true("sizefact" %in% names(result))
+  expect_false(any(is.na(result[["sizefact"]])))
 })
 
 ## test size factors are correct:

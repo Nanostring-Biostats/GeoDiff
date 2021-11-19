@@ -243,185 +243,42 @@ test_that("BGScoreTest dgCMatrix sparse matrix format data runs without errors",
   )
   
   # 1 The function outputs a GeoMx S4 class...
-  expect_true(inherits(case1, "NanoStringGeoMxSet"))
+  expect_true(inherits(case1_1, "NanoStringGeoMxSet"))
   # ...with p values in featureData...
   expect_false("pvalues" %in% colnames(fData(demoData))) # original does not have 'pvalues'
-  expect_true("pvalues" %in% colnames(fData(case1))) # new object does have 'pvalues'
+  expect_true("pvalues" %in% colnames(fData(case1_1))) # new object does have 'pvalues'
   # ...with length same as length of targets.
-  expect_true(length(featureNames(case1)) == length(featureNames(demoData)))
+  expect_true(length(featureNames(case1_1)) == length(featureNames(demoData)))
   # The p value is NA for negative probes.
-  case1_negatives <- case1[which(fData(case1)$CodeClass == "Negative"), ]
-  expect_true(all(is.na(fData(case1_negatives)$pvalues)))
+  case1_1_negatives <- case1_1[which(fData(case1_1)$CodeClass == "Negative"), ]
+  expect_true(all(is.na(fData(case1_1_negatives)$pvalues)))
   
   # 2 The function outputs a GeoMx S4 class...
   # (testing above)...
   # ...with score values in featureData...
   expect_false("scores" %in% colnames(fData(demoData))) # original does not have 'scores'
-  expect_true("scores" %in% colnames(fData(case1))) # new object does have 'scores'
+  expect_true("scores" %in% colnames(fData(case1_1))) # new object does have 'scores'
   # ...with length same as length of targets.
   # (tested above)
   # The score value is NA for negative probes.
-  expect_true(all(is.na(fData(case1_negatives)$scores)))
+  expect_true(all(is.na(fData(case1_1_negatives)$scores)))
   
   # 3 All p values are between 0 and 1 (inclusive)
   # for non-negative features.
-  case1_positives <- case1[fData(case1)[["Negative"]] == FALSE, ] # non-negative features (endog + control)
-  expect_true(all(fData(case1_positives)$pvalues >= 0 | fData(case1_positives)$pvalues <= 1))
+  case1_1_positives <- case1_1[fData(case1_1)[["Negative"]] == FALSE, ] # non-negative features (endog + control)
+  expect_true(all(fData(case1_1_positives)$pvalues >= 0 | fData(case1_1_positives)$pvalues <= 1))
   
   # 4 The length of non-NA p values is equal to the number of non-negative probes.
-  expect_true(length(which(!is.na(fData(case1)$pvalues))) == nrow(case1_positives))
+  expect_true(length(which(!is.na(fData(case1_1)$pvalues))) == nrow(case1_1_positives))
   
   # 5 The length of non-NA scores values is equal to the number of non-negative probes.
-  expect_true(length(which(!is.na(fData(case1)$scores))) == nrow(case1_positives))
+  expect_true(length(which(!is.na(fData(case1_1)$scores))) == nrow(case1_1_positives))
   
   # 6 The order of pvalues is the same as scores.
   expect_identical(
-    pnorm(fData(case1_positives)[["scores"]], lower.tail = FALSE),
-    fData(case1_positives)[["pvalues"]]
+    pnorm(fData(case1_1_positives)[["scores"]], lower.tail = FALSE),
+    fData(case1_1_positives)[["pvalues"]]
   )
-  
-  # Case 2: adjustment factor 5, outlier removal, with prior
-  # This runs the same tests as above but with different parameters.
-  case2 <- BGScoreTest(demoData,
-                       adj = 5,
-                       removeoutlier = TRUE, useprior = TRUE
-  )
-  
-  # 1 The function outputs a GeoMx S4 class...
-  expect_true(inherits(case2, "NanoStringGeoMxSet"))
-  # ...with p values in featureData...
-  expect_false("pvalues" %in% colnames(fData(demoData))) # original does not have 'pvalues'
-  expect_true("pvalues" %in% colnames(fData(case2))) # new object does have 'pvalues'
-  # ...with length same as length of targets.
-  expect_true(length(featureNames(case2)) == length(featureNames(demoData)))
-  # The p value is NA for negative probes.
-  case2_negatives <- case2[which(fData(case2)$CodeClass == "Negative"), ]
-  expect_true(all(is.na(fData(case2_negatives)$pvalues)))
-  
-  # 2 The function outputs a GeoMx S4 class...
-  # (testing above)...
-  # ...with score values in featureData...
-  expect_false("scores" %in% colnames(fData(demoData))) # original does not have 'scores'
-  expect_true("scores" %in% colnames(fData(case2))) # new object does have 'scores'
-  # ...with length same as length of targets.
-  # (tested above)
-  # The score value is NA for negative probes.
-  expect_true(all(is.na(fData(case2_negatives)$scores)))
-  
-  # 3 All p values are between 0 and 1 (inclusive)
-  # for non-negative features.
-  case2_positives <- case1[fData(case2)[["Negative"]] == FALSE, ] # positive features
-  expect_true(all(fData(case2_positives)$pvalues >= 0 | fData(case2_positives)$pvalues <= 1))
-  
-  # 4 The length of non-NA p values is equal to the number of non-negative probes.
-  expect_true(length(which(!is.na(fData(case2)$pvalues))) == nrow(case2_positives))
-  
-  # 5 The length of non-NA scores values is equal to the number of non-negative probes.
-  expect_true(length(which(!is.na(fData(case2)$scores))) == nrow(case2_positives))
-  
-  # 6 The order of pvalues is the same as scores.
-  expect_identical(
-    pnorm(fData(case2_positives)[["scores"]], lower.tail = FALSE),
-    fData(case2_positives)[["pvalues"]]
-  )
-  
-  # Case 3: adjustment factor 5, outlier removal, without prior
-  # This runs the same tests as above but with different parameters.
-  case3 <- BGScoreTest(demoData,
-                       adj = 5,
-                       removeoutlier = TRUE, useprior = FALSE
-  )
-  
-  # 1 The function outputs a GeoMx S4 class...
-  expect_true(inherits(case3, "NanoStringGeoMxSet"))
-  # ...with p values in featureData...
-  expect_false("pvalues" %in% colnames(fData(demoData))) # original does not have 'pvalues'
-  expect_true("pvalues" %in% colnames(fData(case3))) # new object does have 'pvalues'
-  # ...with length same as length of targets.
-  expect_true(length(featureNames(case3)) == length(featureNames(demoData)))
-  # The p value is NA for negative probes.
-  case3_negatives <- case3[which(fData(case3)$CodeClass == "Negative"), ]
-  expect_true(all(is.na(fData(case3_negatives)$pvalues)))
-  
-  # 2 The function outputs a GeoMx S4 class...
-  # (testing above)...
-  # ...with score values in featureData...
-  expect_false("scores" %in% colnames(fData(demoData))) # original does not have 'scores'
-  expect_true("scores" %in% colnames(fData(case3))) # new object does have 'scores'
-  # ...with length same as length of targets.
-  # (tested above)
-  # The score value is NA for negative probes.
-  expect_true(all(is.na(fData(case3_negatives)$scores)))
-  
-  # 3 All p values are between 0 and 1 (inclusive)
-  # for non-negative features.
-  case3_positives <- case1[fData(case3)[["Negative"]] == FALSE, ] # positive features
-  expect_true(all(fData(case3_positives)$pvalues >= 0 | fData(case3_positives)$pvalues <= 1))
-  
-  # 4 The length of non-NA p values is equal to the number of non-negative probes.
-  expect_true(length(which(!is.na(fData(case3)$pvalues))) == nrow(case3_positives))
-  
-  # 5 The length of non-NA scores values is equal to the number of non-negative probes.
-  expect_true(length(which(!is.na(fData(case3)$scores))) == nrow(case3_positives))
-  
-  # 6 The order of pvalues is the same as scores.
-  expect_identical(
-    pnorm(fData(case3_positives)[["scores"]], lower.tail = FALSE),
-    fData(case3_positives)[["pvalues"]]
-  )
-  
-  # Case 4: adjustment factor 5, no outlier removal, with prior
-  # This runs the same tests as above but with different parameters.
-  case4 <- BGScoreTest(demoData,
-                       adj = 5,
-                       removeoutlier = FALSE, useprior = TRUE
-  )
-  
-  # 1 The function outputs a GeoMx S4 class...
-  expect_true(inherits(case4, "NanoStringGeoMxSet"))
-  # ...with p values in featureData...
-  expect_false("pvalues" %in% colnames(fData(demoData))) # original does not have 'pvalues'
-  expect_true("pvalues" %in% colnames(fData(case4))) # new object does have 'pvalues'
-  # ...with length same as length of targets.
-  expect_true(length(featureNames(case4)) == length(featureNames(demoData)))
-  # The p value is NA for negative probes.
-  case4_negatives <- case4[which(fData(case4)$CodeClass == "Negative"), ]
-  expect_true(all(is.na(fData(case4_negatives)$pvalues)))
-  
-  # 2 The function outputs a GeoMx S4 class...
-  # (testing above)...
-  # ...with score values in featureData...
-  expect_false("scores" %in% colnames(fData(demoData))) # original does not have 'scores'
-  expect_true("scores" %in% colnames(fData(case4))) # new object does have 'scores'
-  # ...with length same as length of targets.
-  # (tested above)
-  # The score value is NA for negative probes.
-  expect_true(all(is.na(fData(case4_negatives)$scores)))
-  
-  # 3 All p values are between 0 and 1 (inclusive)
-  # for non-negative features.
-  case4_positives <- case1[fData(case4)[["Negative"]] == FALSE, ] # positive features
-  expect_true(all(fData(case4_positives)$pvalues >= 0 | fData(case4_positives)$pvalues <= 1))
-  
-  # 4 The length of non-NA p values is equal to the number of non-negative probes.
-  expect_true(length(which(!is.na(fData(case4)$pvalues))) == nrow(case4_positives))
-  
-  # 5 The length of non-NA scores values is equal to the number of non-negative probes.
-  expect_true(length(which(!is.na(fData(case4)$scores))) == nrow(case4_positives))
-  
-  # 6 The order of pvalues is the same as scores.
-  expect_identical(
-    pnorm(fData(case4_positives)[["scores"]], lower.tail = FALSE),
-    fData(case4_positives)[["pvalues"]]
-  )
-  
-  # four different settings should yield different results if outliers are present.
-  expect_false(identical(fData(case1)[["pvalues"]], fData(case2)[["pvalues"]]))
-  expect_false(identical(fData(case1)[["pvalues"]], fData(case3)[["pvalues"]]))
-  expect_false(identical(fData(case1)[["pvalues"]], fData(case4)[["pvalues"]]))
-  expect_false(identical(fData(case2)[["pvalues"]], fData(case3)[["pvalues"]]))
-  expect_false(identical(fData(case2)[["pvalues"]], fData(case4)[["pvalues"]]))
-  expect_false(identical(fData(case3)[["pvalues"]], fData(case4)[["pvalues"]]))
 })
 test_that("BGScoreTest for multiple slides produces desired results", {
 
