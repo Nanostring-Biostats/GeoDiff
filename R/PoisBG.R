@@ -138,7 +138,9 @@ fitPoisBG_function = function(object, iterations = 10, tol = 1e-3, size_scale = 
   size_scale <- match.arg(size_scale)
   n_feature <- NROW(object)
   n_sample <- NCOL(object)
-  ind_na <- which(is.na(object), arr.ind = TRUE)
+  if (sum(is.na(object)) ==0){ind_na = NA}
+  else{ind_na <- which(is.na(object), arr.ind = TRUE)}
+  
   featfact0 <- numeric(n_feature)
   sizefact <- colMeans(object)
   
@@ -151,13 +153,16 @@ fitPoisBG_function = function(object, iterations = 10, tol = 1e-3, size_scale = 
   sizefact <- sizefact / scale_fac
   sizefact0 <- sizefact
   sizefact_mat <- matrix(rep(sizefact, n_feature), n_feature, n_sample, byrow = TRUE)
-  sizefact_mat[ind_na] <- NA
+  if (is.na(ind_na)) {}
+  else {sizefact_mat[ind_na] <- NA}
+  
   object_rowsum = rowSums(object)
   object_colsum = colSums(object)
   for (iter in seq_len(iterations)) {
     featfact <- object_rowsum / Rfast::rowsums(sizefact_mat)
     featfact_mat <- matrix(rep(featfact, n_sample), n_feature, n_sample)
-    featfact_mat[ind_na] <- NA
+    if (is.na(ind_na) ){}
+    else {featfact_mat[ind_na] <- NA}
     
     sizefact <- object_colsum / Rfast::colsums(featfact_mat)
     names(sizefact) = colnames(object)
@@ -170,7 +175,8 @@ fitPoisBG_function = function(object, iterations = 10, tol = 1e-3, size_scale = 
     sizefact <- sizefact / scale_fac
     
     sizefact_mat <- matrix(rep(sizefact, n_feature), n_feature, n_sample, byrow = TRUE)
-    sizefact_mat[ind_na] <- NA
+    if (is.na(ind_na) ){}
+    else {sizefact_mat[ind_na] <- NA}
     
     message(sprintf(
       "Iteration = %s, squared error = %e",

@@ -24,6 +24,22 @@ test_that("fitPoisBG returns a well-formatted geomxset object", {
     expect_true(all(is.na(fData(res)$featfact[fData(res)$featfact == "Endogenous"])))
     expect_identical(!is.na(fData(res)$featfact), fData(res)$CodeClass == "Negative")
 })
+test_that("do a thing",{
+  
+  data("demoData")
+  negdat <- demoData[which(Biobase::fData(demoData)$CodeClass == "Negative"), ]
+  countmat <- Biobase::exprs(negdat)
+  countmat = as(countmat, "dgCMatrix")
+  result <- fitPoisBG(
+    object = countmat,
+    iterations = 10,
+    tol = 1e-3,
+    size_scale = "sum")
+  demoData[["sizefact"]] <- result$sizefact[Biobase::sampleNames(demoData)]
+  Biobase::fData(demoData)[["featfact"]] <- NA
+  Biobase::fData(demoData)[["featfact"]][match(names(result$featfact), Biobase::featureNames(demoData), nomatch = 0)] <- result$featfact
+  demoData <- aggreprobe(demoData, use = "cor")
+})
 
 ## test size factors are correct:
 test_that("sizefact is correct", {
