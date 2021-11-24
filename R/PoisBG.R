@@ -58,7 +58,7 @@ setMethod(
     # extract the negative probes matrix
     negdat <- object[which(Biobase::fData(object)$CodeClass == "Negative"), ]
     countmat <- Biobase::exprs(negdat)
-    
+    print(dim(countmat))
     if (is.null(groupvar)) {
       # fit the model as a single slide
       split <- FALSE
@@ -114,26 +114,7 @@ setMethod(
   }
 )
 
-#' Estimate Poisson background model
-#'
-#' Estimate Poisson background model:
-#'
-#' @param object count matrix with features in rows and samples in columns
-#' @param iterations maximum iterations to be run, default=10
-#' @param tol tolerance to determine convergence, default = 1e-3
-#' @param size_scale method to scale the sizefact, sum(sizefact)=1 when size_scale="sum", sizefact[1]=1 when size_scale="first"
-#'
-#' @return a list of following items
-#' \itemize{
-#'   \item sizefact - estimated size factor
-#'   \item featfact - estimated feature factor
-#'   \item countmat - the input count matrix
-#' }
-#'
-#' @rdname fitPoisBG-methods
-#' @aliases fitPoisBG,matrix-method
-#' 
-#' 
+
 fitPoisBG_function = function(object, iterations = 10, tol = 1e-3, size_scale = c("sum", "first")) {
   size_scale <- match.arg(size_scale)
   n_feature <- NROW(object)
@@ -198,6 +179,26 @@ fitPoisBG_function = function(object, iterations = 10, tol = 1e-3, size_scale = 
     countmat = object
   ))
 }
+#' Estimate Poisson background model
+#'
+#' Estimate Poisson background model:
+#'
+#' @param object count matrix with features in rows and samples in columns
+#' @param iterations maximum iterations to be run, default=10
+#' @param tol tolerance to determine convergence, default = 1e-3
+#' @param size_scale method to scale the sizefact, sum(sizefact)=1 when size_scale="sum", sizefact[1]=1 when size_scale="first"
+#'
+#' @return a list of following items
+#' \itemize{
+#'   \item sizefact - estimated size factor
+#'   \item featfact - estimated feature factor
+#'   \item countmat - the input count matrix
+#' }
+#'
+#' @rdname fitPoisBG-methods
+#' @aliases fitPoisBG,matrix-method
+#' 
+#' 
 setMethod(
   "fitPoisBG", "dgCMatrix",fitPoisBG_function
 )
@@ -503,7 +504,7 @@ setMethod(
     
     # simualte data (do it only once)
     #WHY?
-    countmat_simu <- t(rpois(rep(1, ncol(countmat)), lambda = countmat_expected))
+    countmat_simu <- t(apply(countmat_expected, 1, function(x) rpois(rep(1, ncol(countmat)), lambda = x)))
     lowtail_prob1_simu <- ppois(q = countmat_simu, lambda = countmat_expected)
     lowtail_prob2_simu <- ppois(q = countmat_simu - 1, lambda = countmat_expected)
     lowtail_prob_simu <- (lowtail_prob1_simu + lowtail_prob2_simu) / 2
