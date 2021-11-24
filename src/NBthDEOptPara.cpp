@@ -1,5 +1,6 @@
 #include <cmath>
-//#include "GeoDiff.h"
+#include "GeoDiff.h"
+#include <Rcpp.h>
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 
@@ -11,7 +12,7 @@ using namespace roptim;
 // You can include R code blocks in C++ files processed with sourceCpp
 // (useful for testing and development). The R code will be automatically
 // run after the compilation.
-// 
+//
 
 
 class NBthDE_paranll : public Functor {
@@ -166,7 +167,7 @@ List NBthDE_paraOptfeat(arma::mat& X, //define these terms
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
-List NBthDE_paraOptall(arma::mat& Y,
+List NBthDE_paraOptall(arma::sp_mat& Y,
                    arma::mat& X,
                    arma::vec& alpha0,
                    arma::vec& alpha,
@@ -179,9 +180,10 @@ List NBthDE_paraOptall(arma::mat& Y,
 
   int n = X.n_cols;
   int m = Y.n_cols;
+  int n_rows = Y.n_rows;
   arma::mat par(n+2,m);
   List hes(m);
-
+  
 
   arma::vec conv(m);
   Rcout << "number of columns: "<< m << " \n";
@@ -189,7 +191,12 @@ List NBthDE_paraOptall(arma::mat& Y,
   if(sizescale){
     for(int i=0; i < m; i++){
       try{
-        List result = NBthDE_paraOptfeat(X, Y.col(i),
+        //Rcout << i << "\n";
+        arma::vec Ycol(n_rows);
+        for(int k=0; k<n_rows; k++){
+          Ycol(k)=Y(k,i);
+        }
+        List result = NBthDE_paraOptfeat(X, Ycol,
                                          threshold0(i)*alpha0, threshold0(i)*alpha,
                                          preci1, 1.0, preci2, x0, calhes);
   
@@ -199,14 +206,17 @@ List NBthDE_paraOptall(arma::mat& Y,
       }
       catch (...){
         failcount++;
-        //Rcout << i << "failed ";
       }
     }
 
   } else {
     for(int i=0; i < m; i++){
       try{
-        List result = NBthDE_paraOptfeat(X, Y.col(i),
+        arma::vec Ycol(n_rows);
+        for(int k=0; k<n_rows; k++){
+          Ycol(k)=Y(k,i);
+        }
+        List result = NBthDE_paraOptfeat(X, Ycol,
                                alpha0, alpha,
                                preci1, threshold0(i), preci2, x0, calhes);
   
@@ -216,7 +226,6 @@ List NBthDE_paraOptall(arma::mat& Y,
       }
         catch (...){
           failcount++;
-          Rcout << i << "failed ";
       }
     }
   }
@@ -225,4 +234,3 @@ List NBthDE_paraOptall(arma::mat& Y,
                       Named("conv") = conv,
                       Named("hes") = hes);
 }
-
