@@ -278,55 +278,7 @@ setMethod(
 )
 
 
-#' Negative Binomial threshold model for differential expression analysis
-#'
-#' Negative Binomial threshold model for differential expression analysis
-#'
-#' @param form model formula
-#' @param annot annotations files with variables in the formula
-#' @param object count matrix with features in rows and samples in columns
-#' @param probenum a vector of numbers of probes in each gene, default = rep(1, NROW(object))
-#' @param features_high subset of features which are well above the background
-#' @param features_all full list of features
-#' @param sizefact_start initial value for size factors
-#' @param sizefact_BG size factor for background
-#' @param threshold_mean average threshold level
-#' @param preci2 precision for the background, default=10000
-#' @param lower_threshold lower limit for the threshold, default=0.01
-#' @param prior_type empirical bayes prior type, choose from c("contrast", "equal")
-#' @param sizefactrec whether to recalculate sizefact, default=TRUE
-#' @param size_scale method to scale the sizefact, sum(sizefact)=1 when size_scale="sum", sizefact[1]=1 when size_scale="first"
-#' @param sizescalebythreshold XXXX, default = FALSE
-#' @param iterations how many iterations need to run to get final results, default=2,
-#'                   the first iteration apply the model only on features_high and construct the prior then refit the model using this prior for all genes.
-#' @param covrob whether to use robust covariance in calculating covariance. default=FALSE
-#' @param preci1con The user input constant term in specifying precision matrix 1, default=1/25
-#' @param cutoff term in calculating precision matrix 1, default=10
-#' @param confac The user input factor for contrast in precision matrix 1, default=1
-#' @param ... additional argument list that might be used
-#'
-#' @importFrom Matrix bdiag
-#' @importFrom robust covRob
-#'
-#' @return a list of
-#' \itemize{
-#'   \item X, design matrix
-#'   \item para0, estimated parameters for the first iteration, including regression coefficients, r and threshold in rows and features in columns
-#'   \item para, estimated parameters, including regression coefficients, r and threshold in rows and features in columns
-#'   \item sizefact, estimated sizefact
-#'   \item sizefact0, estimated sizefact in iter=1
-#'   \item preci1, precision matrix for regression coefficients estimated in iter=1
-#'   \item Im0, Information matrix of parameters in iter=1
-#'   \item Im, Information matrix of parameters in iter=2
-#'   \item conv0, vector of convergence for iter=1, 0 converged, 1 not converged
-#'   \item conv, vector of convergence for iter=2, 0 converged, 1 not converged
-#'   \item features_high, same as the input features_high
-#'   \item features_all, same as the input features_all
-#' }
-#'
-#' @rdname fitNBthDE-methods
-#' @aliases fitNBthDE,matrix-method
-#' 
+
 fitNBthDE_funct =     function(form, annot, object, probenum,
                                features_high, features_all, sizefact_start, sizefact_BG,
                                threshold_mean, preci2=10000, lower_threshold = 0.01,
@@ -370,12 +322,11 @@ fitNBthDE_funct =     function(form, annot, object, probenum,
   } else {
     startpara <- c(rep(0, ncol(X)), 1, threshold_mean)
   }
-  #might lead to memory blowing up... need to figure out t(sparse_mat[subset,])
-  object_mat = as.matrix(object)
+
   for (iter in seq_len(iterations)) {
     if (iter == 1) {
       result <- NBthDE_paraOptall(
-        t(object_mat[features_high, ]), X, sizefact_BG, sizefact,
+        t(object[features_high, ]), X, sizefact_BG, sizefact,
         preci1, threshold_mean * probenum[features_high], preci2,
         startpara, sizescalebythreshold, (iter == iterations)
       )
@@ -390,7 +341,7 @@ fitNBthDE_funct =     function(form, annot, object, probenum,
       conv0 <- conv
     } else {
       result <- NBthDE_paraOptall(
-        t(object_mat[features_all, ]), X, sizefact_BG, sizefact,
+        t(object[features_all, ]), X, sizefact_BG, sizefact,
         preci1, threshold_mean * probenum[features_all], preci2,
         startpara, sizescalebythreshold, (iter == iterations)
       )
@@ -488,7 +439,55 @@ fitNBthDE_funct =     function(form, annot, object, probenum,
     features_all = features_all
   ))
 }
-
+#' Negative Binomial threshold model for differential expression analysis
+#'
+#' Negative Binomial threshold model for differential expression analysis
+#'
+#' @param form model formula
+#' @param annot annotations files with variables in the formula
+#' @param object count matrix with features in rows and samples in columns
+#' @param probenum a vector of numbers of probes in each gene, default = rep(1, NROW(object))
+#' @param features_high subset of features which are well above the background
+#' @param features_all full list of features
+#' @param sizefact_start initial value for size factors
+#' @param sizefact_BG size factor for background
+#' @param threshold_mean average threshold level
+#' @param preci2 precision for the background, default=10000
+#' @param lower_threshold lower limit for the threshold, default=0.01
+#' @param prior_type empirical bayes prior type, choose from c("contrast", "equal")
+#' @param sizefactrec whether to recalculate sizefact, default=TRUE
+#' @param size_scale method to scale the sizefact, sum(sizefact)=1 when size_scale="sum", sizefact[1]=1 when size_scale="first"
+#' @param sizescalebythreshold XXXX, default = FALSE
+#' @param iterations how many iterations need to run to get final results, default=2,
+#'                   the first iteration apply the model only on features_high and construct the prior then refit the model using this prior for all genes.
+#' @param covrob whether to use robust covariance in calculating covariance. default=FALSE
+#' @param preci1con The user input constant term in specifying precision matrix 1, default=1/25
+#' @param cutoff term in calculating precision matrix 1, default=10
+#' @param confac The user input factor for contrast in precision matrix 1, default=1
+#' @param ... additional argument list that might be used
+#'
+#' @importFrom Matrix bdiag
+#' @importFrom robust covRob
+#'
+#' @return a list of
+#' \itemize{
+#'   \item X, design matrix
+#'   \item para0, estimated parameters for the first iteration, including regression coefficients, r and threshold in rows and features in columns
+#'   \item para, estimated parameters, including regression coefficients, r and threshold in rows and features in columns
+#'   \item sizefact, estimated sizefact
+#'   \item sizefact0, estimated sizefact in iter=1
+#'   \item preci1, precision matrix for regression coefficients estimated in iter=1
+#'   \item Im0, Information matrix of parameters in iter=1
+#'   \item Im, Information matrix of parameters in iter=2
+#'   \item conv0, vector of convergence for iter=1, 0 converged, 1 not converged
+#'   \item conv, vector of convergence for iter=2, 0 converged, 1 not converged
+#'   \item features_high, same as the input features_high
+#'   \item features_all, same as the input features_all
+#' }
+#'
+#' @rdname fitNBthDE-methods
+#' @aliases fitNBthDE,matrix-method
+#' 
 setMethod(
     "fitNBthDE", "dgCMatrix", fitNBthDE_funct
 )
