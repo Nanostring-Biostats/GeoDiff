@@ -58,7 +58,7 @@ setMethod(
     # extract the negative probes matrix
     negdat <- object[which(Biobase::fData(object)$CodeClass == "Negative"), ]
     countmat <- Biobase::exprs(negdat)
-    print(dim(countmat))
+    
     if (is.null(groupvar)) {
       # fit the model as a single slide
       split <- FALSE
@@ -137,9 +137,12 @@ fitPoisBG_function = function(object, iterations = 10, tol = 1e-3, size_scale = 
   if (is.na(ind_na)) {}
   else {sizefact_mat[ind_na] <- NA}
   
-  object_rowsum = rowSums(object)
-  object_colsum = colSums(object)
+  object_rowsum = rowSums(object, na.rm = TRUE)
+  object_colsum = colSums(object, na.rm = TRUE)
   for (iter in seq_len(iterations)) {
+    if (is.na(ind_na) ){}
+    else {sizefact_mat[ind_na] <- 0}
+    #print(any(is.na(sizefact_mat)))
     featfact <- object_rowsum / Rfast::rowsums(sizefact_mat)
     featfact_mat <- matrix(rep(featfact, n_sample), n_feature, n_sample)
     if (is.na(ind_na) ){}
@@ -263,20 +266,26 @@ setMethod(
     sizefact_mat <- matrix(rep(sizefact, n_feature), n_feature, n_sample, byrow = TRUE)
     sizefact_mat[ind_na] <- NA
     featfact0 <- matrix(0, n_feature, length(uniid))
+    tmp_obj = object
+    tmp_obj[ind_na] = 0
+
+    tmp_sizefact_mat = sizefact_mat
+    tmp_sizefact_mat[ind_na] = 0
     for (iter in seq_len(iterations)) {
       #featfact <- sapply(uniid, function(x) {
       # apply(object[, x == id, drop = FALSE], 1, sum, na.rm = TRUE) /
       #   apply(sizefact_mat[, x == id, drop = FALSE], 1, sum, na.rm = TRUE)
       featfact <- sapply(uniid, function(x) {
-        Rfast::rowsums(object[, x == id, drop = FALSE]) /
-          Rfast::rowsums(sizefact_mat[, x == id, drop = FALSE])
+        rowSums(tmp_obj[, x == id, drop = FALSE], na.rm=TRUE) /
+          rowSums(sizefact_mat[, x == id, drop = FALSE], na.rm=TRUE)
       })
       
       featfact_mat <- featfact[, id]
       featfact_mat[ind_na] <- NA
-      
+      tmp_featfact_mat = featfact_mat
+      tmp_featfact_mat[ind_na] = 0
       #sizefact <- apply(object, 2, sum, na.rm = TRUE) / apply(featfact_mat, 2, sum, na.rm = TRUE)
-      sizefact <- Rfast::colsums(object) / Rfast::colsums(featfact_mat)
+      sizefact <- colSums(tmp_obj, na.rm=TRUE) / colSums(tmp_featfact_mat, na.rm=TRUE)
       if (size_scale == "first") {
         scale_fac <- sizefact[1]
       } else if (size_scale == "sum") {
@@ -491,19 +500,15 @@ setMethod(
     }
     
     countmat <- as.matrix(countmat)
-    #conmat = rbind(as.vector(countmat),as.vector(countmat_expected))
-    #unique_pairs = unique(conmat, MARGIN=2)
-    #print(length(unique_pairs))
+    
     lowtail_prob1 <- ppois(q = countmat, lambda = countmat_expected)
     lowtail_prob2 <- ppois(q = countmat - 1, lambda = countmat_expected)
     
-    #print(length(unique()) )   
     lowtail_prob <- (lowtail_prob1 + lowtail_prob2) / 2
     
     uptail_prob <- 1 - lowtail_prob
     
     # simualte data (do it only once)
-    #WHY?
     countmat_simu <- t(apply(countmat_expected, 1, function(x) rpois(rep(1, ncol(countmat)), lambda = x)))
     lowtail_prob1_simu <- ppois(q = countmat_simu, lambda = countmat_expected)
     lowtail_prob2_simu <- ppois(q = countmat_simu - 1, lambda = countmat_expected)
@@ -511,15 +516,23 @@ setMethod(
     
     if (generate_ppplot) {
       y <- sort(lowtail_prob, na.last = TRUE)
+      
+      y = y[!is.na(y)]
+      y = y[!is.infinite(y)]
+      
       y_simu <- sort(lowtail_prob_simu, na.last = TRUE)
+      
+      y_simu = y_simu[!is.na(y_simu)]
+      y_simu = y_simu[!is.infinite(y_simu)]
+      
       plot(y_simu, y, ylim = c(0, 1), xlab = "Empircal CDF from simulated data", ylab = "Empircal CDF", main = "Poisson model")
       graphics::abline(a = 0, b = 1)
     }
     
-    tmp_mat = (countmat - countmat_expected)^2 / countmat_expected
-    tmp_mat[is.na(tmp_mat)] <- 0
-    disper = sum(Rfast::colsums(tmp_mat))/length(unname(countmat))
-    #disper <- mean((countmat - countmat_expected)^2 / countmat_expected, na.rm = TRUE)
+    # tmp_mat = (countmat - countmat_expected)^2 / countmat_expected
+    # tmp_mat[is.na(tmp_mat)] <- 0
+    # disper = sum(Rfast::colsums(tmp_mat))/length(unname(countmat))
+    disper <- mean((countmat - countmat_expected)^2 / countmat_expected, na.rm = TRUE)
     
     
     if (padj) {
@@ -706,7 +719,7 @@ setMethod(
         featfact <- BGmod$featfact
       }
       
-      back <- Rfast::colmeans(featfact[, BGmod$id], na.rm = TRUE) * BGmod$sizefact
+      back <- colMeans(featfact[, BGmod$id], na.rm = TRUE) * BGmod$sizefact
     }
     
     
