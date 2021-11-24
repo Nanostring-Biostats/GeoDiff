@@ -28,6 +28,7 @@ importFrom(graphics,boxplot)
 importFrom(lme4,lFormula)
 importFrom(robust,covRob)
 importFrom(Matrix,Matrix)
+import(Matrix)
 
 export(BGScoreTest)
 export(DENBth)

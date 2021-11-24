@@ -294,7 +294,7 @@ fitNBthDE_funct =     function(form, annot, object, probenum,
   }
   
   X <- model.matrix(form, data = annot)
-  object = Matrix(object,sparse=TRUE)
+  object = Matrix::Matrix(object, sparse=TRUE)
   
   sizefact0 <- sizefact <- sizefact_start
   n_sample <- nrow(X)
