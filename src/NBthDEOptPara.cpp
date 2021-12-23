@@ -344,15 +344,15 @@ List NBthDE_paraOptall(arma::sp_mat &Y,
         par.col(i) = (as<arma::vec>(result["par"]));
         hes[i] = result["hes"];
         conv(i) = result["conv"];
-        Rcout << "vector_time: " << duration.count() << " \n";
-        Rcout << "optim_time: " << duration1.count() << " \n";
+        //Rcout << "vector_time: " << duration.count() << " \n";
+        //Rcout << "optim_time: " << duration1.count() << " \n";
       }
       catch (...){
         failcount++;
       }
     }
-    Rcout << "vector_time: "<< vector_time/m << " \n";
-    Rcout << "optim_time: "<< optim_time/m << " \n";
+    //Rcout << "vector_time: "<< vector_time/m << " \n";
+    //Rcout << "optim_time: "<< optim_time/m << " \n";
   } else {
     for(int i=0; i < m; i++){
       try{
