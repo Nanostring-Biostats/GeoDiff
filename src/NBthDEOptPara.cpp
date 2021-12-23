@@ -1,4 +1,3 @@
-
 #include <cmath>
 #include "GeoDiff.h"
 #include <Rcpp.h>
@@ -102,52 +101,52 @@ public:
     
     double threshold = x(n+1);
     
-    auto starttmp0 = high_resolution_clock::now();
-    tmp0 = arma::exp2(X*beta);
-    auto stoptmp0 = high_resolution_clock::now();
-    auto durationtmp0 = duration_cast<microseconds>(stoptmp0 - starttmp0);
-    Rcout << "duration tmp0: "<< durationtmp0.count() << " \n";
+    //auto starttmp0 = high_resolution_clock::now();
+    //tmp0 = arma::exp2(X*beta);
+    //auto stoptmp0 = high_resolution_clock::now();
+    //auto durationtmp0 = duration_cast<microseconds>(stoptmp0 - starttmp0);
+    //Rcout << "duration tmp0: "<< durationtmp0.count() << " \n";
     
-    auto starttmp01 = high_resolution_clock::now();
+    //auto starttmp01 = high_resolution_clock::now();
     arma::vec tmpneg1 = X*beta;
-    arma::vec tmp01 = arma::zeros<arma::vec>(tmpneg1.n_elem);
+    tmp0 = arma::zeros<arma::vec>(tmpneg1.n_elem);
     for(int l=0;l<tmpneg1.n_elem;l++){
-      tmp01(l) = pow(2.0, tmpneg1(l));
+      tmp0(l) = pow(2.0, tmpneg1(l));
     }
-    auto stoptmp01 = high_resolution_clock::now();
-    auto durationtmp01 = duration_cast<microseconds>(stoptmp01 - starttmp01);
-    Rcout << "duration tmp01: "<< durationtmp01.count() << " \n";
+    //auto stoptmp01 = high_resolution_clock::now();
+    //auto durationtmp01 = duration_cast<microseconds>(stoptmp01 - starttmp01);
+    //Rcout << "duration tmp01: "<< durationtmp01.count() << " \n";
     
     
-    auto starttmp1 = high_resolution_clock::now();
+    //auto starttmp1 = high_resolution_clock::now();
     tmp1 = alpha0*threshold+alpha%tmp0; // % here is element-wise multiplication
-    auto stoptmp1 = high_resolution_clock::now();
-    auto durationtmp1 = duration_cast<microseconds>(stoptmp1 - starttmp1);
-    Rcout << "duration tmp1: "<< durationtmp1.count() << " \n";
+    //auto stoptmp1 = high_resolution_clock::now();
+    //auto durationtmp1 = duration_cast<microseconds>(stoptmp1 - starttmp1);
+    //Rcout << "duration tmp1: "<< durationtmp1.count() << " \n";
     
-    auto start = high_resolution_clock::now();
+    //auto start = high_resolution_clock::now();
     arma::vec llk = ref_dnbinom_mu_vec(y, r, tmp1); //rate-limiting step
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(stop - start);
-    Rcout << "duration llk: "<< duration.count() << " \n";
+    //auto stop = high_resolution_clock::now();
+    //auto duration = duration_cast<microseconds>(stop - start);
+    //Rcout << "duration llk: "<< duration.count() << " \n";
     
     if (std::isinf(sum(llk))){
       throw 20;
     }
     
-    auto startpen10 = high_resolution_clock::now();
+    //auto startpen10 = high_resolution_clock::now();
     arma::mat pen10 = beta.t()*preci1*beta;
     
     double pen1 = pen10(0,0)/2.0;
-    auto stoppen10 = high_resolution_clock::now();
-    auto durationpen10 = duration_cast<microseconds>(stoppen10 - startpen10);
-    Rcout << "duration pen10: "<< durationpen10.count() << " \n";
+    //auto stoppen10 = high_resolution_clock::now();
+    //auto durationpen10 = duration_cast<microseconds>(stoppen10 - startpen10);
+    //Rcout << "duration pen10: "<< durationpen10.count() << " \n";
     
-    auto startresult = high_resolution_clock::now();
+    //auto startresult = high_resolution_clock::now();
     double result = -arma::sum(llk)+pen1+(1.0/2.0)*pow((threshold-threshold0),2)*preci2;
-    auto stopresult = high_resolution_clock::now();
-    auto durationresult = duration_cast<microseconds>(stopresult - startresult);
-    Rcout << "duration result: "<< durationresult.count() << " \n";
+    //auto stopresult = high_resolution_clock::now();
+    //auto durationresult = duration_cast<microseconds>(stopresult - startresult);
+    //Rcout << "duration result: "<< durationresult.count() << " \n";
     
     return(result);
   }
@@ -166,17 +165,17 @@ public:
     double r = x(n);
     double threshold = x(n+1);
     
-    auto starttmp2 = high_resolution_clock::now();
+    //auto starttmp2 = high_resolution_clock::now();
     arma::vec tmp2 = (y/tmp1-1.0)/(1.0+tmp1/r);
-    auto stoptmp2 = high_resolution_clock::now();
-    auto durationtmp2 = duration_cast<microseconds>(stoptmp2 - starttmp2);
-    Rcout << "duration tmp2: "<< durationtmp2.count() << " \n";
+    //auto stoptmp2 = high_resolution_clock::now();
+    //auto durationtmp2 = duration_cast<microseconds>(stoptmp2 - starttmp2);
+    //Rcout << "duration tmp2: "<< durationtmp2.count() << " \n";
     
-    auto start1 = high_resolution_clock::now();
+    //auto start1 = high_resolution_clock::now();
     gr(arma::span(0,n-1)) = -log(2.0)*X.t()*(tmp2%alpha%tmp0)+preci1.t()*beta;  //rate-limiting step
-    auto stop1 = high_resolution_clock::now();
-    auto duration1 = duration_cast<microseconds>(stop1 - start1);
-    Rcout << "duration transpose: "<< duration1.count() << " \n";
+    //auto stop1 = high_resolution_clock::now();
+    //auto duration1 = duration_cast<microseconds>(stop1 - start1);
+    //Rcout << "duration transpose: "<< duration1.count() << " \n";
     //gr(arma::span(0,n-1)) = -log(2.0)*X.t()*(tmp2%alpha%tmp0)+preci1.t()*beta;  //rate-limiting step
     
     
@@ -201,7 +200,7 @@ public:
     //auto duration3 = duration_cast<microseconds>(stop3 - start3);
     //Rcout << "duration plr as is: "<< duration3.count() << " \n";
     
-    auto start4 = high_resolution_clock::now();
+    //auto start4 = high_resolution_clock::now();
     arma::vec tmp5 = 1 + tmp1/r;//rate-limiting step
     arma::vec pLr = arma::zeros<arma::vec>(tmp5.n_elem);
     for(int k = 0; k < m; k++){
@@ -212,11 +211,11 @@ public:
     }
     pLr += -(y-tmp1)/(r+tmp1);
     gr(n) = -arma::sum(pLr);
-    auto stop4 = high_resolution_clock::now();
-    auto duration4 = duration_cast<microseconds>(stop4 - start4);
-    Rcout << "duration plr fancy: "<< duration4.count() << " \n";
+    //auto stop4 = high_resolution_clock::now();
+    //auto duration4 = duration_cast<microseconds>(stop4 - start4);
+    //Rcout << "duration plr fancy: "<< duration4.count() << " \n";
     
-    auto start5 = high_resolution_clock::now();
+    //auto start5 = high_resolution_clock::now();
     arma::vec tmp52 = 1 + tmp1/r;//rate-limiting step
     double running_total = 0;
     for(int k = 0; k < m; k++){
@@ -226,20 +225,20 @@ public:
       }
       running_total += -(y(k)-tmp1(k))/(r+tmp1(k));
     }
-
-    auto stop5 = high_resolution_clock::now();
-    auto duration5 = duration_cast<microseconds>(stop5 - start5);
-    Rcout << "duration just sum: "<< duration5.count() << " \n";
-    Rcout << "gr(n): "<< gr(n) << " \n";
-    Rcout << "-running_total: "<< -running_total << " \n";
     
-    auto start4tmp3 = high_resolution_clock::now();
+    //auto stop5 = high_resolution_clock::now();
+    //auto duration5 = duration_cast<microseconds>(stop5 - start5);
+    //Rcout << "duration just sum: "<< duration5.count() << " \n";
+    //Rcout << "gr(n): "<< gr(n) << " \n";
+    //Rcout << "-running_total: "<< -running_total << " \n";
+    
+    //auto start4tmp3 = high_resolution_clock::now();
     arma::mat tmp3 = tmp2.t()*alpha0;
     
     gr(n+1) = -tmp3(0,0)+(threshold-threshold0)*preci2;
-    auto stop4tmp3 = high_resolution_clock::now();
-    auto duration4tmp3 = duration_cast<microseconds>(stop4tmp3 - start4tmp3);
-    Rcout << "duration plr fancy: "<< duration4tmp3.count() << " \n";
+    //auto stop4tmp3 = high_resolution_clock::now();
+    //auto duration4tmp3 = duration_cast<microseconds>(stop4tmp3 - start4tmp3);
+    //Rcout << "duration plr fancy: "<< duration4tmp3.count() << " \n";
     
   }
   
