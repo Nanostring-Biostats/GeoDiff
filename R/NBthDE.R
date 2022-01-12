@@ -122,7 +122,8 @@ setMethod(
     threshold_mean = NULL, preci2 = 10000, lower_threshold = 0.01,
     prior_type = c("contrast", "equal"), sizefactrec = TRUE,
     size_scale = c("sum", "first"), sizescalebythreshold = FALSE,
-    iterations = 2, covrob = FALSE, preci1con=1/25, cutoff = 10, confac = 1) {
+    iterations = 2, covrob = FALSE, preci1con=1/25, cutoff = 10, confac = 1, 
+    run_parallel = FALSE, n_parallel = 4) {
         fDat <- Biobase::fData(object)
         pDat <- Biobase::pData(object)
 
@@ -253,7 +254,6 @@ setMethod(
                 stop("No information is found to determine the data type (CTA or WTA).")
             }
         }
-
         result <- fitNBthDE(
             form = form,
             annot = annot[ROIs_high, ],
@@ -270,21 +270,26 @@ setMethod(
             sizescalebythreshold = sizescalebythreshold,
             iterations = iterations,
             covrob = covrob,
-            preci1con = preci1con
-        )
-
+            preci1con = preci1con,
+            run_parallel = run_parallel
+            )
         return(result)
     }
 )
 
 
 
-fitNBthDE_funct =     function(form, annot, object, probenum,
-                               features_high, features_all, sizefact_start, sizefact_BG,
-                               threshold_mean, preci2=10000, lower_threshold = 0.01,
+fitNBthDE_funct =     function(form, annot, 
+                               object, probenum,
+                               features_high, features_all, 
+                               sizefact_start, sizefact_BG,
+                               threshold_mean, preci2=10000, 
+                               lower_threshold = 0.01,
                                prior_type = c("contrast", "equal"), sizefactrec = TRUE,
                                size_scale = c("sum", "first"), sizescalebythreshold = FALSE,
-                               iterations = 2, covrob = FALSE, preci1con=1/25, cutoff = 10, confac = 1) {
+                               iterations = 2, covrob = FALSE, preci1con=1/25, 
+                               cutoff = 10, confac = 1, 
+                               run_parallel = FALSE, n_parallel = 8) {
   if (iterations == 1) {
     if (!setequal(features_high, features_all)) {
       warning("features_high and features_all need to be identical when iterations=1,
@@ -325,11 +330,36 @@ fitNBthDE_funct =     function(form, annot, object, probenum,
 
   for (iter in seq_len(iterations)) {
     if (iter == 1) {
-      result <- NBthDE_paraOptall(
-        t(object[features_high, ]), X, sizefact_BG, sizefact,
-        preci1, threshold_mean * probenum[features_high], preci2,
-        startpara, sizescalebythreshold, (iter == iterations)
-      )
+      # two paths for this - if !run_parallel run through data serial
+      if(!run_parallel){
+        result <- NBthDE_paraOptall(
+          t(object[features_high, ]), X, sizefact_BG, sizefact,
+          preci1, threshold_mean * probenum[features_high], preci2,
+          startpara, sizescalebythreshold, (iter == iterations))
+      }
+      # if run_parallel: split the rows up into ~equal chunks and run 
+      # concatenate results to look like serial processing
+      else{
+        
+        result = mclapply(1:n_parallel, function(i) {
+          my_len = length(features_high)
+          start_index = (round(((i-1)*my_len/n_parallel))+1)
+          end_index = round((i)*my_len/n_parallel)
+          NBthDE_paraOptall(
+            t(object[features_high, ])[,start_index:end_index], X, sizefact_BG, sizefact,
+            preci1, threshold_mean * probenum[features_high[start_index:end_index]], preci2,
+            startpara, sizescalebythreshold, (iter == iterations))
+        }, mc.cores = n_parallel)
+        new_result= list('par'=matrix(,nrow=NROW(result[[1]]$par),ncol=0),
+                       'hes',
+                       'conv'=matrix(,nrow=0,ncol=1))
+        for(i in result){
+          new_result$par = cbind(new_result$par, i$par)
+          new_result$hes = c(new_result$hes, i$hes)
+          new_result$conv = rbind(new_result$conv, i$conv)
+        }
+        result=new_result
+        }
       para <- result$par
       colnames(para) <- features_high
       conv <- result$conv
@@ -340,11 +370,32 @@ fitNBthDE_funct =     function(form, annot, object, probenum,
       para0 <- para
       conv0 <- conv
     } else {
+      if(!run_parallel){
       result <- NBthDE_paraOptall(
         t(object[features_all, ]), X, sizefact_BG, sizefact,
         preci1, threshold_mean * probenum[features_all], preci2,
         startpara, sizescalebythreshold, (iter == iterations)
-      )
+      )}
+      else{
+        result =  mclapply(1:n_parallel, function(i) {
+          my_len = length(features_all)
+          start_index = (round(((i-1)*my_len/n_parallel))+1)
+          end_index = round(i*my_len/n_parallel)
+          NBthDE_paraOptall(
+            t(object[features_all, ])[,start_index:end_index], X, sizefact_BG, sizefact,
+            preci1, threshold_mean * probenum[features_all[start_index:end_index]], preci2,
+            startpara, sizescalebythreshold, (iter == iterations))
+        }, mc.cores = n_parallel)
+        new_result= list('par'=matrix(,nrow=NROW(result[[1]]$par),ncol=0),
+                         'hes',
+                         'conv'=matrix(,nrow=0,ncol=1))
+        for(i in result){
+          new_result$par = cbind(new_result$par, i$par)
+          new_result$hes = c(new_result$hes, i$hes)
+          new_result$conv = rbind(new_result$conv, i$conv)
+        }
+        result=new_result
+      }
       para <- result$par
       colnames(para) <- features_all
       conv <- result$conv
