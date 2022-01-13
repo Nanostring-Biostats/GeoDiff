@@ -9,9 +9,12 @@
 using namespace std::chrono;
 
 
-// Use auto keyword to avoid typing long
-// type definitions to get the timepoint
-// at this instant use function now()
+// written by Lei Yang (lyang@nanostring.com) and Ned Booker (ned@procogia.com)
+// some of the parameters are not clearly named (Ned doesn't know what biological significance they have)
+// see Lei's paper (see NBthDE_model_description.pdf in this repo).
+// this code defines an optimisation function (NBthDE_paranll)
+// defines a function, given some data, that returns the optimised parameters of that function (NBthDE_paraOptfeat)
+// and defines a function to iterate through all the columns of a given 
 
 // [[Rcpp::depends(RcppArmadillo)]]
 
@@ -24,7 +27,8 @@ using namespace roptim;
 // (useful for testing and development). The R code will be automatically
 // run after the compilation.
 //
-// trying to make the vectorized 
+// original dnbinom_mu vector function - makes N separate calls to the built in
+// R dnbimon_mu function - this is fairly slow (calculates everything and then takes logs)
 arma::vec ref_dnbinom_mu_vec(const arma::vec &y, 
                              const double r, 
                              const arma::vec &tmp1){
@@ -32,7 +36,6 @@ arma::vec ref_dnbinom_mu_vec(const arma::vec &y,
   arma::vec prob(N);
   for(int i=0; i<N; i++)
     prob(i) = R::dnbinom_mu(y(i), r, tmp1(i), 1);
-  //mem_map::memo.clear();
   return(prob);
 }
 
@@ -40,6 +43,10 @@ arma::vec approx_dnbinom_mu_vec(const arma::vec &x_vec,
                              const double s, 
                              const arma::vec &mu_vec){
   //function based on reading the #$%^& R documents of dnbinom!!!
+  //everything is already logarithmic - separates out what can be
+  //precalculated
+  // prob(x,s,mu) = ((s+x-1) choose (s-1))*p^s *(1-p)^x
+  
   int N = x_vec.n_elem;
   arma::vec prob(N);
   double s_binom = lgamma(s);
@@ -52,49 +59,32 @@ arma::vec approx_dnbinom_mu_vec(const arma::vec &x_vec,
       p = s/(s+mu_vec(i));
       prob(i) = lgamma(s+x_vec(i)) - s_binom - lgamma(x_vec(i)+1) + s*log(p) + x_vec(i)*log(1-p);
     }
-    if(std::isinf(prob(i))){
-      //Rcout << "x: "<< x_vec(i) << " \n";
-      //Rcout << "s: "<< s << " \n";
-      //Rcout << "mu: "<< mu_vec(i) << " \n";
+    if(std::isinf(prob(i))){ // in some instances prob can go to -inf, this catches that
       prob(i) = 0; //check this doesn't wreck everything
     }
-    if(std::isnan(prob(i))){ // in some instances r can go to nan, this catches that
-      //Rcout << "x: "<< x_vec(i) << " \n";
-      //Rcout << "s: "<< s << " \n";
-      //Rcout << "mu: "<< mu_vec(i) << " \n";
+    if(std::isnan(prob(i))){ // in some instances prob can go to nan, this catches that
       prob(i) = 0; //check this doesn't wreck everything
     }
-    // if(x_vec(i)!=0){
-    //   Rcout << "x_vec(i): "<< x_vec(i) << "\n";
-    //   Rcout << "s: "<< s << "\n";
-    //   Rcout << "mu_vec(i): "<< mu_vec(i) << "\n";
-    //   Rcout << "correct: "<< R::dnbinom_mu(x_vec(i), s, mu_vec(i), 1) << " \n";
-    //   Rcout << "calculated: "<< prob(i) << " \n";
-    //   Rcout << "calculated/correct" <<prob(i)/R::dnbinom_mu(x_vec(i), s, mu_vec(i), 1) << " \n";
-    //   Rcout << "calculated+2/correct" <<(2+prob(i))/R::dnbinom_mu(x_vec(i), s, mu_vec(i), 1) << " \n";
-    // }
   }
   return(prob);
 }
 
-
 class NBthDE_paranll : public Functor {
 public:
-  arma::vec y; // wa column of another matrix?
-  arma::mat X; // our data matrix?
-  arma::vec alpha0; // what is alpha0?
-  arma::vec alpha; // what is alpha0?
-  arma::mat preci1; // what is alpha0?
-  double preci2; // what is alpha0?
-  double threshold0; // what this a threashold for?
-  arma::vec beta;
-  arma::vec tmp0;
-  arma::vec tmp1;
+  arma::vec y; //column of t(object[features_high, ]) in R code (fitNBthDE_funct in NBthDE.R)
+  arma::mat X; // X = model.matrix(form, data = annot) in R code (fitNBthDE_funct in NBthDE.R)
+  arma::vec alpha0; // sizefact_BG in R code
+  arma::vec alpha; // sizefact in R code
+  arma::mat preci1; // related to preci1con (see NBthDE.R lines 311-317)
+  double preci2; // (preci2 in fitNBthDE_funct in NBthDE.R (defaults to 10000))
+  double threshold0; // threshold_mean * probenum[features_high]
+  arma::vec beta; //this vector is shared between the operator function and the gradient
+  arma::vec tmp0; // this vector is shared between the operator function and the gradient 
+  arma::vec tmp1; // vector is shared between the operator function and the gradient
   
   double operator()(const arma::vec &x) override {
     int n = X.n_cols;
     beta = x(arma::span(0,n-1)); //subset of vecotr x
-    //Rcout << "optimiser iteration \n";
     double r = x(n);
     
     if(std::isnan(r)){ // in some instances r can go to nan, this catches that
@@ -103,28 +93,14 @@ public:
     
     double threshold = x(n+1);
     
-    arma::vec tmpneg1 = X*beta;
+    arma::vec tmpneg1 = X*beta; // calculate tmp0_i = 2^(X_ij * beta_j) in stages to speed it up 
     tmp0 = arma::zeros<arma::vec>(tmpneg1.n_elem);
     for(int l=0;l<tmpneg1.n_elem;l++){
       tmp0(l) = pow(2.0, tmpneg1(l));
     }
     tmp1 = alpha0*threshold+alpha%tmp0; // % here is element-wise multiplication
     
-    // auto start1 = high_resolution_clock::now();
-    //arma::vec alt_llk = ref_dnbinom_mu_vec(y, r, tmp1); //rate-limiting step
-    // auto stop1 = high_resolution_clock::now();
-    // auto duration1 = duration_cast<microseconds>(stop1 - start1);
-    // Rcout << "duration original: "<< duration1.count() << " \n";
-    // 
-    // auto start2 = high_resolution_clock::now();
     arma::vec llk = approx_dnbinom_mu_vec(y, r, tmp1); //rate-limiting step
-    // auto stop2 = high_resolution_clock::now();
-    // auto duration2 = duration_cast<microseconds>(stop2 - start2);
-    // Rcout << "duration ned_opt: "<< duration2.count() << " \n";
-    // 
-    //Rcout << "sum(llk): "<< sum(llk) << " \n";
-    //Rcout << "sum(alt_llk): "<< sum(alt_llk) << " \n";
-    // Rcout << "sum(llk)-sum(approx_llk): "<< sum(llk)- sum(approx_llk)<< " \n";
 
     if (std::isinf(sum(llk))){
       throw 20;
@@ -141,64 +117,29 @@ public:
     
     return(result);
   }
-  
-  
-  
+ 
   void Gradient(const arma::vec &x, arma::vec &gr) override {
     int n = X.n_cols;
     int m = y.n_elem;
     
-    
     gr = arma::zeros<arma::vec>(n+2);
-    
-    //beta = x(arma::span(0,n-1));
     
     double r = x(n);
     double threshold = x(n+1);
     
     arma::vec tmp2 = (y/tmp1-1.0)/(1.0+tmp1/r);
     
-    //auto start1 = high_resolution_clock::now();
     gr(arma::span(0,n-1)) = -log(2.0)*X.t()*(tmp2%alpha%tmp0)+preci1.t()*beta;  //rate-limiting step
-    //auto stop1 = high_resolution_clock::now();
-    //auto duration1 = duration_cast<microseconds>(stop1 - start1);
-    //Rcout << "duration transpose: "<< duration1.count() << " \n";
-    //gr(arma::span(0,n-1)) = -log(2.0)*X.t()*(tmp2%alpha%tmp0)+preci1.t()*beta;  //rate-limiting step
     
-    
-    //auto start2 = high_resolution_clock::now();
     arma::vec tmp4 = 1 + tmp1/r;//rate-limiting step
-    //arma::vec pLr = -arma::log(tmp4);//rate-limiting step
     arma::vec pLr = arma::zeros<arma::vec>(tmp4.n_elem);
     for(int k = 0; k < m; k++){
       pLr(k) = -log(tmp4(k));
-    }
-    //auto stop2 = high_resolution_clock::now();
-    //auto duration2 = duration_cast<microseconds>(stop2 - start2);
-    //Rcout << "duration log matrix: "<< duration2.count() << " \n";
-
-    //auto start3 = high_resolution_clock::now();
-    for(int k = 0; k < m; k++){
       for(int j = 0; j < y(k); j++){
         pLr(k) += 1.0/(j+r);
       }
     }
-    //auto stop3 = high_resolution_clock::now();
-    //auto duration3 = duration_cast<microseconds>(stop3 - start3);
-    //Rcout << "duration plr as is: "<< duration3.count() << " \n";
-    
-    //auto start4 = high_resolution_clock::now();
-    arma::vec tmp5 = 1 + tmp1/r;//rate-limiting step
-    arma::vec pLr2 = arma::zeros<arma::vec>(tmp4.n_elem);
-    for(int k = 0; k < m; k++){
-      pLr2(k) = -log(tmp4(k));
-      for(int j = 0; j < y(k); j++){
-        pLr2(k) += 1.0/(j+r);
-      }
-    }
-    //auto stop4 = high_resolution_clock::now();
-    //auto duration4 = duration_cast<microseconds>(stop4 - start4);
-    //Rcout << "duration plr fancy: "<< duration4.count() << " \n";
+
     
     pLr += -(y-tmp1)/(r+tmp1);
     gr(n) = -arma::sum(pLr);
@@ -209,17 +150,17 @@ public:
   }
   
 };
-
+                         
 // [[Rcpp::export]]
-List NBthDE_paraOptfeat(arma::mat &X, //define these terms
-                        const arma::vec &y,
-                        arma::vec alpha0,
-                        arma::vec alpha,
-                        arma::mat &preci1,
-                        double threshold0,
-                        double preci2,
-                        arma::vec &x0,
-                        bool calhes) {
+List NBthDE_paraOptfeat(arma::mat &X, //X = model.matrix(form, data = annot) in R code (fitNBthDE_funct in NBthDE.R)
+                        const arma::vec &y, //data vector part of t(object[features_high, ]) in R code (fitNBthDE_funct in NBthDE.R)
+                        arma::vec alpha0, //sizefact_BG in R code
+                        arma::vec alpha,//sizefact in R code
+                        arma::mat &preci1, //related to preci1con (see NBthDE.R lines 311-317)
+                        double threshold0, //threshold_mean * probenum[features_high]
+                        double preci2, //(preci2 in fitNBthDE_funct in NBthDE.R (defaults to 10000))
+                        arma::vec &x0, //startpara <- c(rep(0, ncol(X)), 1, (1.0 or threshold_mean))
+                        bool calhes) { //(iter == iterations) (see fitNBthDE_funct in NBthDE.R for details)
   NBthDE_paranll f;
   f.X=X;
   f.y=y;
@@ -257,21 +198,18 @@ List NBthDE_paraOptfeat(arma::mat &X, //define these terms
   
 }
 
-
-
-
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
-List NBthDE_paraOptall(arma::sp_mat &Y,
-                       arma::mat &X,
-                       arma::vec &alpha0,
-                       arma::vec &alpha,
-                       arma::mat &preci1,
-                       arma::vec &threshold0,
-                       double preci2,
-                       arma::vec &x0,
-                       bool sizescale,
-                       bool calhes){
+List NBthDE_paraOptall(arma::sp_mat &Y, //t(object[features_high, ]) in R code (fitNBthDE_funct in NBthDE.R)
+                       arma::mat &X, // X = model.matrix(form, data = annot) in R code (fitNBthDE_funct in NBthDE.R)
+                       arma::vec &alpha0, //sizefact_BG in R code
+                       arma::vec &alpha, //sizefact in R code
+                       arma::mat &preci1, //related to preci1con (see NBthDE.R lines 311-317)
+                       arma::vec &threshold0, //threshold_mean * probenum[features_high]
+                       double preci2, //(preci2 in fitNBthDE_funct in NBthDE.R (defaults to 10000))
+                       arma::vec &x0, //startpara <- c(rep(0, ncol(X)), 1, (1.0 or threshold_mean))
+                       bool sizescale, //sizescalebythreshold (defaults to FALSE)
+                       bool calhes){ //(iter == iterations) (see fitNBthDE_funct in NBthDE.R for details)
   
   int n = X.n_cols;
   int m = Y.n_cols;
@@ -288,37 +226,26 @@ List NBthDE_paraOptall(arma::sp_mat &Y,
   if(sizescale){
     for(int i=0; i < m; i++){
       try{
-        //Rcout << i << "\n";
-        auto start = high_resolution_clock::now();
         arma::vec Ycol(n_rows);
         for(int k=0; k<n_rows; k++){
           if(Y(k,i)!=0){
             Ycol(k)=Y(k,i);
           }
         }
-        //Rcout << "Ycol \n";
-        auto stop = high_resolution_clock::now();
-        auto duration = duration_cast<microseconds>(stop - start);
         vector_time += duration.count();
-        auto start1 = high_resolution_clock::now();
         List result = NBthDE_paraOptfeat(X, Ycol,
                                          threshold0(i)*alpha0, threshold0(i)*alpha,
                                          preci1, 1.0, preci2, x0, calhes);
-        auto stop1 = high_resolution_clock::now();
-        auto duration1 = duration_cast<microseconds>(stop1 - start1);
         optim_time += duration1.count();
         par.col(i) = (as<arma::vec>(result["par"]));
         hes[i] = result["hes"];
         conv(i) = result["conv"];
-        //Rcout << "vector_time: " << duration.count() << " \n";
-        //Rcout << "optim_time: " << duration1.count() << " \n";
       }
       catch (...){
         failcount++;
       }
     }
-    Rcout << "vector_time: "<< vector_time/m << " \n";
-    Rcout << "optim_time: "<< optim_time/m << " \n";
+
   } else {
     for(int i=0; i < m; i++){
       try{
