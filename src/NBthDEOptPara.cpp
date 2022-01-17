@@ -217,8 +217,6 @@ List NBthDE_paraOptall(arma::sp_mat &Y, //t(object[features_high, ]) in R code (
   arma::mat par(n+2,m);
   List hes(m);
   
-  int vector_time = 0;
-  int optim_time = 0;
   
   arma::vec conv(m);
   Rcout << "number of columns: "<< m << " \n";
@@ -232,11 +230,11 @@ List NBthDE_paraOptall(arma::sp_mat &Y, //t(object[features_high, ]) in R code (
             Ycol(k)=Y(k,i);
           }
         }
-        vector_time += duration.count();
+        
         List result = NBthDE_paraOptfeat(X, Ycol,
                                          threshold0(i)*alpha0, threshold0(i)*alpha,
                                          preci1, 1.0, preci2, x0, calhes);
-        optim_time += duration1.count();
+        
         par.col(i) = (as<arma::vec>(result["par"]));
         hes[i] = result["hes"];
         conv(i) = result["conv"];
