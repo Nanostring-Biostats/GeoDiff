@@ -108,173 +108,173 @@
 #' @rdname fitNBthDE-methods
 #'
 setGeneric("fitNBthDE",
-    signature = c("object"),
-    function(object, ...) standardGeneric("fitNBthDE")
+           signature = c("object"),
+           function(object, ...) standardGeneric("fitNBthDE")
 )
 
 #' @rdname fitNBthDE-methods
 #' @aliases fitNBthDE,NanoStringGeoMxSet-method
 setMethod(
-    "fitNBthDE", "NanoStringGeoMxSet",
-    function(object, form, split, ROIs_high = NULL,
-    features_high = NULL, features_all = NULL,
-    sizefact_start = NULL, sizefact_BG = NULL,
-    threshold_mean = NULL, preci2 = 10000, lower_threshold = 0.01,
-    prior_type = c("contrast", "equal"), sizefactrec = TRUE,
-    size_scale = c("sum", "first"), sizescalebythreshold = FALSE,
-    iterations = 2, covrob = FALSE, preci1con=1/25, cutoff = 10, confac = 1, 
-    run_parallel = FALSE, n_parallel = 4) {
-        fDat <- Biobase::fData(object)
-        pDat <- Biobase::pData(object)
-
-        posdat <- object[-which(fDat$CodeClass == "Negative"), ]
-        countmat <- Biobase::exprs(posdat)
-
-        fDatNeg <- fDat[which(fDat$CodeClass == "Negative"), ]
-
-        # only calculate thmean if any of the three params are missing
-        if (any(c(is.null(sizefact_BG), is.null(sizefact_start), is.null(ROIs_high), is.null(threshold_mean)))) {
-            if (isFALSE(split)) {
-                # single slide
-                if (!("sizefact" %in% varLabels(object))) {
-                    stop("Please run `fitPoisBG` first.")
-                } else {
-                    # calculate the thmean for WTA or CTA data
-                    thmean <- mean(fDatNeg[["featfact"]])
-                }
-            } else {
-                # multiple slides
-                if (!("sizefact_sp" %in% varLabels(object))) {
-                    stop("Please run `fitPoisBG` first with `groupvar`.")
-                } else {
-                    # calculate the thmean for WTA or CTA data
-                    thmean <- colMeans(fDatNeg[, grep("featfact_", fvarLabels(object))])[1]
-                }
-            }
-        }
-
-        # calculate probenum for the dataset
-        if ("probenum" %in% fvarLabels(posdat)) {
-            probenum <- fData(posdat)[["probenum"]]
+  "fitNBthDE", "NanoStringGeoMxSet",
+  function(object, form, split, ROIs_high = NULL,
+           features_high = NULL, features_all = NULL,
+           sizefact_start = NULL, sizefact_BG = NULL,
+           threshold_mean = NULL, preci2 = 10000, lower_threshold = 0.01,
+           prior_type = c("contrast", "equal"), sizefactrec = TRUE,
+           size_scale = c("sum", "first"), sizescalebythreshold = FALSE,
+           iterations = 2, covrob = FALSE, preci1con=1/25, cutoff = 10, confac = 1, 
+           run_parallel = FALSE, n_parallel = 4) {
+    fDat <- Biobase::fData(object)
+    pDat <- Biobase::pData(object)
+    
+    posdat <- object[-which(fDat$CodeClass == "Negative"), ]
+    countmat <- Biobase::exprs(posdat)
+    
+    fDatNeg <- fDat[which(fDat$CodeClass == "Negative"), ]
+    
+    # only calculate thmean if any of the three params are missing
+    if (any(c(is.null(sizefact_BG), is.null(sizefact_start), is.null(ROIs_high), is.null(threshold_mean)))) {
+      if (isFALSE(split)) {
+        # single slide
+        if (!("sizefact" %in% varLabels(object))) {
+          stop("Please run `fitPoisBG` first.")
         } else {
-            stop("No `probenum` is found. Run `aggreprobe` first.")
+          # calculate the thmean for WTA or CTA data
+          thmean <- mean(fDatNeg[["featfact"]])
         }
-        names(probenum) <- rownames(fData(posdat))
-
-        # extract annot from object
-        annot <- Biobase::pData(object)
-
-        # setting default value for ROIs_high
-        if (is.null(ROIs_high)) {
-            if (!("sizefact_fitNBth" %in% varLabels(object))) {
-                stop("Please run `fitNBth` first.")
-            } else {
-                # estimate values for ROIs_high
-                ROIs_high <- Biobase::sampleNames(object)[which((quantile(Biobase::fData(object)[["para"]][, 1], probs = 0.90, na.rm = TRUE) -
-                    Biobase::notes(object)[["threshold"]]) * object$sizefact_fitNBth > 2)]
-            }
+      } else {
+        # multiple slides
+        if (!("sizefact_sp" %in% varLabels(object))) {
+          stop("Please run `fitPoisBG` first with `groupvar`.")
+        } else {
+          # calculate the thmean for WTA or CTA data
+          thmean <- colMeans(fDatNeg[, grep("featfact_", fvarLabels(object))])[1]
         }
-
-        # setting default value for sizefact_BG
-        if (is.null(sizefact_BG)) {
-            if (isFALSE(split)) {
-                # single slide
-                sizefact_BG <- pDat[ROIs_high, "sizefact"]
-            } else {
-                # multiple slides
-                sizefact_BG <- pDat[ROIs_high, ][["sizefact_sp"]]
-            }
-            names(sizefact_BG) <- rownames(pDat[ROIs_high, ])
-        }
-
-        # setting default value for sizefact_start
-        if (is.null(sizefact_start)) {
-            if (!("sizefact_fitNBth" %in% colnames(pDat))) {
-                stop("Please run `fitNBth` first.")
-            } else {
-                sizefact_start <- pDat[ROIs_high, ][["sizefact_fitNBth"]]
-            }
-            names(sizefact_start) <- rownames(pDat[ROIs_high, ])
-        }
-
-        # setting default value for features_all
-        if (is.null(features_all)) {
-            gene_sum <- rowSums(countmat)
-
-            if (any(grepl("WTA", toupper(Biobase::annotation(object))))) {
-                features_all <- rownames(countmat)
-            } else if (any(grepl("CTA", toupper(Biobase::annotation(object))))) {
-                features_all <- rownames(countmat)
-            } else {
-                stop("No information is found to determine the data type (CTA or WTA).")
-            }
-        }
-
-        # setting default value for features_high
-        if (is.null(features_high)) {
-            gene_sum <- rowSums(countmat)
-
-            if (any(grepl("WTA", toupper(Biobase::annotation(object))))) {
-                features_high <- names(which(((gene_sum > quantile(gene_sum, probs = 0.5)) & (gene_sum < quantile(gene_sum, probs = 0.95)))))
-                features_high <- sample(features_high, 1500)
-            } else if (any(grepl("CTA", toupper(Biobase::annotation(object))))) {
-                if ( !any(grepl("scores", colnames(fDat))) ) {
-                    stop("Please run `BGScoreTest` first. If you run `BGScoreTest` before, please specify `split = TRUE` for multiple slides.")
-                } else {
-                    if ( any(grepl("scores_", colnames(fDat))) ){
-                        # fit the model with multiple slides
-                        sc1_scores <- fData(posdat)[, grep("scores_", fvarLabels(posdat))]
-                        rownames(sc1_scores) <- fData(posdat)[, "TargetName"]
-                        features_high <- apply(sc1_scores, 2, function(x){
-                            ((x > quantile(x, probs = 0.4)) & (x < quantile(x, probs = 0.95)))
-                        })
-                        features_high <- names(which(apply(features_high, 1, all)))
-
-                    } else {
-                        sc1_scores <- fData(posdat)[, "scores"]
-                        names(sc1_scores) <- fData(posdat)[, "TargetName"]
-                        features_high <- ((sc1_scores > quantile(sc1_scores, probs = 0.4)) & (sc1_scores < quantile(sc1_scores, probs = 0.95)))
-                        features_high <- names(which(features_high))
-
-                    }
-                }
-
-            } else {
-                stop("No information is found to determine the data type (CTA or WTA).")
-            }
-        }
-
-        # replace threshold_mean for WTA
-        if (is.null(threshold_mean)) {
-            if (any(grepl("WTA", toupper(Biobase::annotation(object))))) {
-                threshold_mean <- Biobase::notes(object)[["threshold"]]
-            } else if (any(grepl("CTA", toupper(Biobase::annotation(object))))) {
-                threshold_mean <- thmean
-            } else {
-                stop("No information is found to determine the data type (CTA or WTA).")
-            }
-        }
-        result <- fitNBthDE(
-            form = form,
-            annot = annot[ROIs_high, ],
-            object = countmat[, ROIs_high],
-            probenum = probenum,
-            features_high = features_high,
-            features_all = features_all,
-            sizefact_start = sizefact_start,
-            sizefact_BG = sizefact_BG,
-            threshold_mean = threshold_mean,
-            preci2 = preci2,
-            prior_type = prior_type,
-            sizefactrec = sizefactrec,
-            sizescalebythreshold = sizescalebythreshold,
-            iterations = iterations,
-            covrob = covrob,
-            preci1con = preci1con,
-            run_parallel = run_parallel
-            )
-        return(result)
+      }
     }
+    
+    # calculate probenum for the dataset
+    if ("probenum" %in% fvarLabels(posdat)) {
+      probenum <- fData(posdat)[["probenum"]]
+    } else {
+      stop("No `probenum` is found. Run `aggreprobe` first.")
+    }
+    names(probenum) <- rownames(fData(posdat))
+    
+    # extract annot from object
+    annot <- Biobase::pData(object)
+    
+    # setting default value for ROIs_high
+    if (is.null(ROIs_high)) {
+      if (!("sizefact_fitNBth" %in% varLabels(object))) {
+        stop("Please run `fitNBth` first.")
+      } else {
+        # estimate values for ROIs_high
+        ROIs_high <- Biobase::sampleNames(object)[which((quantile(Biobase::fData(object)[["para"]][, 1], probs = 0.90, na.rm = TRUE) -
+                                                           Biobase::notes(object)[["threshold"]]) * object$sizefact_fitNBth > 2)]
+      }
+    }
+    
+    # setting default value for sizefact_BG
+    if (is.null(sizefact_BG)) {
+      if (isFALSE(split)) {
+        # single slide
+        sizefact_BG <- pDat[ROIs_high, "sizefact"]
+      } else {
+        # multiple slides
+        sizefact_BG <- pDat[ROIs_high, ][["sizefact_sp"]]
+      }
+      names(sizefact_BG) <- rownames(pDat[ROIs_high, ])
+    }
+    
+    # setting default value for sizefact_start
+    if (is.null(sizefact_start)) {
+      if (!("sizefact_fitNBth" %in% colnames(pDat))) {
+        stop("Please run `fitNBth` first.")
+      } else {
+        sizefact_start <- pDat[ROIs_high, ][["sizefact_fitNBth"]]
+      }
+      names(sizefact_start) <- rownames(pDat[ROIs_high, ])
+    }
+    
+    # setting default value for features_all
+    if (is.null(features_all)) {
+      gene_sum <- rowSums(countmat)
+      
+      if (any(grepl("WTA", toupper(Biobase::annotation(object))))) {
+        features_all <- rownames(countmat)
+      } else if (any(grepl("CTA", toupper(Biobase::annotation(object))))) {
+        features_all <- rownames(countmat)
+      } else {
+        stop("No information is found to determine the data type (CTA or WTA).")
+      }
+    }
+    
+    # setting default value for features_high
+    if (is.null(features_high)) {
+      gene_sum <- rowSums(countmat)
+      
+      if (any(grepl("WTA", toupper(Biobase::annotation(object))))) {
+        features_high <- names(which(((gene_sum > quantile(gene_sum, probs = 0.5)) & (gene_sum < quantile(gene_sum, probs = 0.95)))))
+        features_high <- sample(features_high, 1500)
+      } else if (any(grepl("CTA", toupper(Biobase::annotation(object))))) {
+        if ( !any(grepl("scores", colnames(fDat))) ) {
+          stop("Please run `BGScoreTest` first. If you run `BGScoreTest` before, please specify `split = TRUE` for multiple slides.")
+        } else {
+          if ( any(grepl("scores_", colnames(fDat))) ){
+            # fit the model with multiple slides
+            sc1_scores <- fData(posdat)[, grep("scores_", fvarLabels(posdat))]
+            rownames(sc1_scores) <- fData(posdat)[, "TargetName"]
+            features_high <- apply(sc1_scores, 2, function(x){
+              ((x > quantile(x, probs = 0.4)) & (x < quantile(x, probs = 0.95)))
+            })
+            features_high <- names(which(apply(features_high, 1, all)))
+            
+          } else {
+            sc1_scores <- fData(posdat)[, "scores"]
+            names(sc1_scores) <- fData(posdat)[, "TargetName"]
+            features_high <- ((sc1_scores > quantile(sc1_scores, probs = 0.4)) & (sc1_scores < quantile(sc1_scores, probs = 0.95)))
+            features_high <- names(which(features_high))
+            
+          }
+        }
+        
+      } else {
+        stop("No information is found to determine the data type (CTA or WTA).")
+      }
+    }
+    
+    # replace threshold_mean for WTA
+    if (is.null(threshold_mean)) {
+      if (any(grepl("WTA", toupper(Biobase::annotation(object))))) {
+        threshold_mean <- Biobase::notes(object)[["threshold"]]
+      } else if (any(grepl("CTA", toupper(Biobase::annotation(object))))) {
+        threshold_mean <- thmean
+      } else {
+        stop("No information is found to determine the data type (CTA or WTA).")
+      }
+    }
+    result <- fitNBthDE(
+      form = form,
+      annot = annot[ROIs_high, ],
+      object = countmat[, ROIs_high],
+      probenum = probenum,
+      features_high = features_high,
+      features_all = features_all,
+      sizefact_start = sizefact_start,
+      sizefact_BG = sizefact_BG,
+      threshold_mean = threshold_mean,
+      preci2 = preci2,
+      prior_type = prior_type,
+      sizefactrec = sizefactrec,
+      sizescalebythreshold = sizescalebythreshold,
+      iterations = iterations,
+      covrob = covrob,
+      preci1con = preci1con,
+      run_parallel = run_parallel
+    )
+    return(result)
+  }
 )
 
 
@@ -327,7 +327,7 @@ fitNBthDE_funct =     function(form, annot,
   } else {
     startpara <- c(rep(0, ncol(X)), 1, threshold_mean)
   }
-
+  
   for (iter in seq_len(iterations)) {
     if (iter == 1) {
       # two paths for this - if !run_parallel run through data serial
@@ -349,17 +349,17 @@ fitNBthDE_funct =     function(form, annot,
             t(object[features_high, ])[,start_index:end_index], X, sizefact_BG, sizefact,
             preci1, threshold_mean * probenum[features_high[start_index:end_index]], preci2,
             startpara, sizescalebythreshold, (iter == iterations))
-        }, mc.cores = n_parallel)
+        }, mc.retry = 5, mc.fail.early = TRUE, mc.cores = n_parallel)
         new_result= list('par'=matrix(,nrow=NROW(result[[1]]$par),ncol=0),
-                       'hes',
-                       'conv'=matrix(,nrow=0,ncol=1))
+                         'hes',
+                         'conv'=matrix(,nrow=0,ncol=1))
         for(i in result){
           new_result$par = cbind(new_result$par, i$par)
           new_result$hes = c(new_result$hes, i$hes)
           new_result$conv = rbind(new_result$conv, i$conv)
         }
         result=new_result
-        }
+      }
       para <- result$par
       colnames(para) <- features_high
       conv <- result$conv
@@ -371,11 +371,11 @@ fitNBthDE_funct =     function(form, annot,
       conv0 <- conv
     } else {
       if(!run_parallel){
-      result <- NBthDE_paraOptall(
-        t(object[features_all, ]), X, sizefact_BG, sizefact,
-        preci1, threshold_mean * probenum[features_all], preci2,
-        startpara, sizescalebythreshold, (iter == iterations)
-      )}
+        result <- NBthDE_paraOptall(
+          t(object[features_all, ]), X, sizefact_BG, sizefact,
+          preci1, threshold_mean * probenum[features_all], preci2,
+          startpara, sizescalebythreshold, (iter == iterations)
+        )}
       else{
         result =  mclapply(1:n_parallel, function(i) {
           my_len = length(features_all)
@@ -385,7 +385,7 @@ fitNBthDE_funct =     function(form, annot,
             t(object[features_all, ])[,start_index:end_index], X, sizefact_BG, sizefact,
             preci1, threshold_mean * probenum[features_all[start_index:end_index]], preci2,
             startpara, sizescalebythreshold, (iter == iterations))
-        }, mc.cores = n_parallel)
+        }, mc.retry = 5, mc.fail.early = TRUE, mc.cores = n_parallel)
         new_result= list('par'=matrix(,nrow=NROW(result[[1]]$par),ncol=0),
                          'hes',
                          'conv'=matrix(,nrow=0,ncol=1))
@@ -540,7 +540,7 @@ fitNBthDE_funct =     function(form, annot,
 #' @aliases fitNBthDE,matrix-method
 #' 
 setMethod(
-    "fitNBthDE", "dgCMatrix", fitNBthDE_funct
+  "fitNBthDE", "dgCMatrix", fitNBthDE_funct
 )
 setMethod(
   "fitNBthDE", "matrix", fitNBthDE_funct
@@ -571,49 +571,49 @@ setMethod(
 #' @rdname coefNBth-methods
 
 setGeneric("coefNBth",
-    signature = c("object"),
-    function(object, ...) standardGeneric("coefNBth")
+           signature = c("object"),
+           function(object, ...) standardGeneric("coefNBth")
 )
 
 #' @rdname coefNBth-methods
 #' @aliases coefNBth,list-method
 setMethod(
-    "coefNBth", "list",
-    function(object, fullpara = FALSE) {
-        X <- object$X
-        if (fullpara) {
-            n_para <- ncol(X) + 2
-            paraname <- c(colnames(X), c("r", "threshold"))
-        } else {
-            n_para <- ncol(X)
-            paraname <- colnames(X)
-        }
-        estimate <- object$para[seq_len(n_para), ]
-        se <- lapply(object$Im, function(x) tryCatch(
-            {
-                x_tmp <- diag(solve(x))
-                x_tmp[which(x_tmp <0 )] <- NaN
-                res <- sqrt(x_tmp)[seq_len(n_para)]
-                return(res)
-            },
-            error = function(err) NA))
-
-        wald_stat <- mapply(function(x, y) (x / y), as.list(as.data.frame(estimate)), se, SIMPLIFY = FALSE)
-
-
-        p_value <- sapply(wald_stat, function(x) 2 * pnorm(-abs(x)))
-        wald_stat <- sapply(wald_stat, function(x) x)
-        se <- sapply(se, function(x) x)
-
-        rownames(estimate) <- rownames(wald_stat) <- rownames(p_value) <- rownames(se) <- paraname
-
-        return(list(
-            estimate = estimate,
-            wald_stat = wald_stat,
-            p_value = p_value,
-            se = se
-        ))
+  "coefNBth", "list",
+  function(object, fullpara = FALSE) {
+    X <- object$X
+    if (fullpara) {
+      n_para <- ncol(X) + 2
+      paraname <- c(colnames(X), c("r", "threshold"))
+    } else {
+      n_para <- ncol(X)
+      paraname <- colnames(X)
     }
+    estimate <- object$para[seq_len(n_para), ]
+    se <- lapply(object$Im, function(x) tryCatch(
+      {
+        x_tmp <- diag(solve(x))
+        x_tmp[which(x_tmp <0 )] <- NaN
+        res <- sqrt(x_tmp)[seq_len(n_para)]
+        return(res)
+      },
+      error = function(err) NA))
+    
+    wald_stat <- mapply(function(x, y) (x / y), as.list(as.data.frame(estimate)), se, SIMPLIFY = FALSE)
+    
+    
+    p_value <- sapply(wald_stat, function(x) 2 * pnorm(-abs(x)))
+    wald_stat <- sapply(wald_stat, function(x) x)
+    se <- sapply(se, function(x) x)
+    
+    rownames(estimate) <- rownames(wald_stat) <- rownames(p_value) <- rownames(se) <- paraname
+    
+    return(list(
+      estimate = estimate,
+      wald_stat = wald_stat,
+      p_value = p_value,
+      se = se
+    ))
+  }
 )
 
 
@@ -644,48 +644,48 @@ setMethod(
 #' @rdname contrastNBth-methods
 #'
 setGeneric("contrastNBth",
-    signature = c("object"),
-    function(object, ...) standardGeneric("contrastNBth")
+           signature = c("object"),
+           function(object, ...) standardGeneric("contrastNBth")
 )
 
 #' @rdname contrastNBth-methods
 #' @aliases contrastNBth,list-method
 setMethod(
-    "contrastNBth", "list",
-    function(object, test = c("two-sided", ">", "<"),
-    method = diag(1, ncol(object$X)),
-    baseline = rep(0, ncol(method))) {
-        test <- match.arg(test)
-        X <- object$X
-        n_para <- ncol(X)
-        if (is.matrix(method)) {
-            contrast <- method
-        } else {
-            stop("matrix is the only contrast method is allowed for now")
-        }
-        estimate <- t(contrast) %*% object$para[seq_len(n_para), ]
-        estimate <- estimate - matrix(rep(baseline, ncol(estimate)), ncol = ncol(estimate))
-        se <- lapply(object$Im, function(x) tryCatch(sqrt(diag(t(contrast) %*% solve(x)[seq_len(n_para), seq_len(n_para)] %*% contrast)), error = function(err) NA))
-        wald_stat <- mapply(function(x, y) (x / y), as.list(as.data.frame(estimate)), se, SIMPLIFY = FALSE)
-        if (test == "two-sided") {
-            p_value <- sapply(wald_stat, function(x) 2 * pnorm(-abs(x)))
-        } else if (test == ">") {
-            p_value <- sapply(wald_stat, function(x) pnorm(x, lower.tail = FALSE))
-        } else {
-            p_value <- sapply(wald_stat, function(x) pnorm(x, lower.tail = TRUE))
-        }
-
-        wald_stat <- sapply(wald_stat, function(x) x)
-        se <- sapply(se, function(x) x)
-        rownames(estimate) <- rownames(wald_stat) <- rownames(p_value) <- rownames(se) <- colnames(contrast)
-
-        return(list(
-            estimate = estimate,
-            wald_stat = wald_stat,
-            p_value = p_value,
-            se = se
-        ))
+  "contrastNBth", "list",
+  function(object, test = c("two-sided", ">", "<"),
+           method = diag(1, ncol(object$X)),
+           baseline = rep(0, ncol(method))) {
+    test <- match.arg(test)
+    X <- object$X
+    n_para <- ncol(X)
+    if (is.matrix(method)) {
+      contrast <- method
+    } else {
+      stop("matrix is the only contrast method is allowed for now")
     }
+    estimate <- t(contrast) %*% object$para[seq_len(n_para), ]
+    estimate <- estimate - matrix(rep(baseline, ncol(estimate)), ncol = ncol(estimate))
+    se <- lapply(object$Im, function(x) tryCatch(sqrt(diag(t(contrast) %*% solve(x)[seq_len(n_para), seq_len(n_para)] %*% contrast)), error = function(err) NA))
+    wald_stat <- mapply(function(x, y) (x / y), as.list(as.data.frame(estimate)), se, SIMPLIFY = FALSE)
+    if (test == "two-sided") {
+      p_value <- sapply(wald_stat, function(x) 2 * pnorm(-abs(x)))
+    } else if (test == ">") {
+      p_value <- sapply(wald_stat, function(x) pnorm(x, lower.tail = FALSE))
+    } else {
+      p_value <- sapply(wald_stat, function(x) pnorm(x, lower.tail = TRUE))
+    }
+    
+    wald_stat <- sapply(wald_stat, function(x) x)
+    se <- sapply(se, function(x) x)
+    rownames(estimate) <- rownames(wald_stat) <- rownames(p_value) <- rownames(se) <- colnames(contrast)
+    
+    return(list(
+      estimate = estimate,
+      wald_stat = wald_stat,
+      p_value = p_value,
+      se = se
+    ))
+  }
 )
 
 
@@ -713,27 +713,27 @@ setMethod(
 #' @rdname DENBth-methods
 #'
 setGeneric("DENBth",
-    signature = c("object"),
-    function(object, ...) standardGeneric("DENBth")
+           signature = c("object"),
+           function(object, ...) standardGeneric("DENBth")
 )
 
 #' @rdname DENBth-methods
 #' @aliases DENBth,list-method
 setMethod(
-    "DENBth", "list",
-    function(object, variable, NAto1 = TRUE, padj = TRUE, padj_method = "BH") {
-        DEtab <- as.data.frame(cbind(log2FC = object$estimate[variable, ], pvalue = object$p_value[variable, ]))
-        if (NAto1) {
-            DEtab$pvalue[is.na(DEtab$pvalue)] <- 1
-        }
-
-        if (padj) {
-            DEtab$adjp <- p.adjust(DEtab$pvalue, method = padj_method)
-        }
-
-
-        return(DEtab)
+  "DENBth", "list",
+  function(object, variable, NAto1 = TRUE, padj = TRUE, padj_method = "BH") {
+    DEtab <- as.data.frame(cbind(log2FC = object$estimate[variable, ], pvalue = object$p_value[variable, ]))
+    if (NAto1) {
+      DEtab$pvalue[is.na(DEtab$pvalue)] <- 1
     }
+    
+    if (padj) {
+      DEtab$adjp <- p.adjust(DEtab$pvalue, method = padj_method)
+    }
+    
+    
+    return(DEtab)
+  }
 )
 
 
