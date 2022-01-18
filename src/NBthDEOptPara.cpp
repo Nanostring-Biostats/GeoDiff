@@ -152,14 +152,14 @@ public:
 };
                          
 // [[Rcpp::export]]
-List NBthDE_paraOptfeat(arma::mat &X, //X = model.matrix(form, data = annot) in R code (fitNBthDE_funct in NBthDE.R)
-                        const arma::vec &y, //data vector part of t(object[features_high, ]) in R code (fitNBthDE_funct in NBthDE.R)
+List NBthDE_paraOptfeat(arma::mat& X, //X = model.matrix(form, data = annot) in R code (fitNBthDE_funct in NBthDE.R)
+                        arma::vec y, //data vector part of t(object[features_high, ]) in R code (fitNBthDE_funct in NBthDE.R)
                         arma::vec alpha0, //sizefact_BG in R code
                         arma::vec alpha,//sizefact in R code
-                        arma::mat &preci1, //related to preci1con (see NBthDE.R lines 311-317)
+                        arma::mat& preci1, //related to preci1con (see NBthDE.R lines 311-317)
                         double threshold0, //threshold_mean * probenum[features_high]
                         double preci2, //(preci2 in fitNBthDE_funct in NBthDE.R (defaults to 10000))
-                        arma::vec &x0, //startpara <- c(rep(0, ncol(X)), 1, (1.0 or threshold_mean))
+                        arma::vec& x0, //startpara <- c(rep(0, ncol(X)), 1, (1.0 or threshold_mean))
                         bool calhes) { //(iter == iterations) (see fitNBthDE_funct in NBthDE.R for details)
   NBthDE_paranll f;
   f.X=X;
