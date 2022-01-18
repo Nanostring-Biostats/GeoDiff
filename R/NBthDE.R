@@ -349,7 +349,7 @@ fitNBthDE_funct =     function(form, annot,
             t(object[features_high, ])[,start_index:end_index], X, sizefact_BG, sizefact,
             preci1, threshold_mean * probenum[features_high[start_index:end_index]], preci2,
             startpara, sizescalebythreshold, (iter == iterations))
-        }, mc.retry = 5, mc.fail.early = TRUE, mc.cores = n_parallel)
+        }, mc.cores = n_parallel)
         new_result= list('par'=matrix(,nrow=NROW(result[[1]]$par),ncol=0),
                          'hes',
                          'conv'=matrix(,nrow=0,ncol=1))
@@ -385,7 +385,7 @@ fitNBthDE_funct =     function(form, annot,
             t(object[features_all, ])[,start_index:end_index], X, sizefact_BG, sizefact,
             preci1, threshold_mean * probenum[features_all[start_index:end_index]], preci2,
             startpara, sizescalebythreshold, (iter == iterations))
-        }, mc.retry = 5, mc.fail.early = TRUE, mc.cores = n_parallel)
+        }, mc.cores = n_parallel)
         new_result= list('par'=matrix(,nrow=NROW(result[[1]]$par),ncol=0),
                          'hes',
                          'conv'=matrix(,nrow=0,ncol=1))
