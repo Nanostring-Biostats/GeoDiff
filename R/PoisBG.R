@@ -42,102 +42,85 @@
 #' @rdname fitPoisBG-methods
 setGeneric("fitPoisBG",
            signature = c("object"),
-           function(object, ...)
-             standardGeneric("fitPoisBG"))
+           function(object, ...) standardGeneric("fitPoisBG")
+)
 
 #' @rdname fitPoisBG-methods
 #' @aliases fitPoisBG,NanoStringGeoMxSet-method
-setMethod("fitPoisBG", "NanoStringGeoMxSet",
-          function(object,
-                   groupvar = NULL,
-                   iterations = 10,
-                   tol = 1e-3,
-                   size_scale = c("sum", "first"),
-                   ...) {
-            # check on tol
-            tol <- as.double(tol)
-            stopifnot(length(tol) == 1)
-            stopifnot(tol >= 0)
-            
-            # extract the negative probes matrix
-            negdat <-
-              object[which(Biobase::fData(object)$CodeClass == "Negative"),]
-            countmat <- Biobase::exprs(negdat)
-            
-            if (is.null(groupvar)) {
-              # fit the model as a single slide
-              split <- FALSE
-            } else if (!(groupvar %in% varLabels(object))) {
-              stop(sprintf("%s is not found in the S4 object.", groupvar))
-            } else {
-              # extract the groupvar
-              id <- object[[groupvar]]
-              
-              if (length(unique(id)) == 1) {
-                # this is equivalent as fitting the model as a single slide
-                split <- FALSE
-                warning(sprintf("`%s` has only one value, %s", groupvar, unique(id)))
-              } else {
-                # fit the model for multiple slides
-                split <- TRUE
-              }
-            }
-            
-            if (isFALSE(split)) {
-              # calling the fitPoisBG function when split is FALSE
-              result <- fitPoisBG(
-                object = countmat,
-                iterations = iterations,
-                tol = tol,
-                size_scale = size_scale
-              )
-              
-              object[["sizefact"]] <-
-                result$sizefact[Biobase::sampleNames(object)]
-              Biobase::fData(object)[["featfact"]] <- NA
-              Biobase::fData(object)[["featfact"]][match(names(result$featfact),
-                                                         Biobase::featureNames(object),
-                                                         nomatch = 0)] <- result$featfact
-            } else {
-              # calling the fitPoisBG_sp function when split is TRUE
-              result <- fitPoisBG_sp(
-                object = countmat,
-                id = id,
-                iterations = iterations,
-                tol = tol,
-                size_scale = size_scale
-              )
-              
-              # append results to the object
-              object[["sizefact_sp"]] <-
-                result$sizefact[Biobase::sampleNames(object)]
-              for (index in unique(result$id)) {
-                Biobase::fData(object)[[paste0("featfact_", index)]] <- NA
-                Biobase::fData(object)[[paste0("featfact_", index)]][match(rownames(result$featfact),
-                                                                           Biobase::featureNames(object),
-                                                                           nomatch = 0)] <- result$featfact[, index]
-              }
-              
-              Biobase::notes(object)$fitPoisBG_sp_var <- groupvar
-            }
-            
-            return(object)
-          })
+setMethod(
+  "fitPoisBG", "NanoStringGeoMxSet",
+  function(object, groupvar = NULL, iterations = 10, tol = 1e-3, size_scale = c("sum", "first"), ...) {
+    # check on tol
+    tol <- as.double(tol)
+    stopifnot(length(tol) == 1)
+    stopifnot(tol >= 0)
+    
+    # extract the negative probes matrix
+    negdat <- object[which(Biobase::fData(object)$CodeClass == "Negative"), ]
+    countmat <- Biobase::exprs(negdat)
+    
+    if (is.null(groupvar)) {
+      # fit the model as a single slide
+      split <- FALSE
+    } else if (!(groupvar %in% varLabels(object))) {
+      stop(sprintf("%s is not found in the S4 object.", groupvar))
+    } else {
+      # extract the groupvar
+      id <- object[[groupvar]]
+      
+      if (length(unique(id)) == 1) {
+        # this is equivalent as fitting the model as a single slide
+        split <- FALSE
+        warning(sprintf("`%s` has only one value, %s", groupvar, unique(id)))
+      } else {
+        # fit the model for multiple slides
+        split <- TRUE
+      }
+    }
+    
+    if (isFALSE(split)) {
+      # calling the fitPoisBG function when split is FALSE
+      result <- fitPoisBG(
+        object = countmat,
+        iterations = iterations,
+        tol = tol,
+        size_scale = size_scale
+      )
+      
+      object[["sizefact"]] <- result$sizefact[Biobase::sampleNames(object)]
+      Biobase::fData(object)[["featfact"]] <- NA
+      Biobase::fData(object)[["featfact"]][match(names(result$featfact), Biobase::featureNames(object), nomatch = 0)] <- result$featfact
+    } else {
+      # calling the fitPoisBG_sp function when split is TRUE
+      result <- fitPoisBG_sp(
+        object = countmat,
+        id = id,
+        iterations = iterations,
+        tol = tol,
+        size_scale = size_scale
+      )
+      
+      # append results to the object
+      object[["sizefact_sp"]] <- result$sizefact[Biobase::sampleNames(object)]
+      for (index in unique(result$id)) {
+        Biobase::fData(object)[[paste0("featfact_", index)]] <- NA
+        Biobase::fData(object)[[paste0("featfact_", index)]][match(rownames(result$featfact), Biobase::featureNames(object), nomatch = 0)] <- result$featfact[, index]
+      }
+      
+      Biobase::notes(object)$fitPoisBG_sp_var <- groupvar
+    }
+    
+    return(object)
+  }
+)
 
 
-fitPoisBG_function = function(object,
-                              iterations = 10,
-                              tol = 1e-3,
-                              size_scale = c("sum", "first")) {
+fitPoisBG_function = function(object, iterations = 10, tol = 1e-3, size_scale = c("sum", "first")) {
   size_scale <- match.arg(size_scale)
   n_feature <- NROW(object)
   n_sample <- NCOL(object)
-  if (sum(is.na(object)) == 0) {
-    ind_na = NA
-  }
-  else{
-    ind_na <- which(is.na(object), arr.ind = TRUE)
-  }
+  if (sum(is.na(object)) ==0){ind_na = NA}
+  else{ind_na <- which(is.na(object), arr.ind = TRUE)}
   
   featfact0 <- numeric(n_feature)
   sizefact <- colMeans(object)
@@ -150,31 +133,20 @@ fitPoisBG_function = function(object,
   
   sizefact <- sizefact / scale_fac
   sizefact0 <- sizefact
-  sizefact_mat <-
-    matrix(rep(sizefact, n_feature), n_feature, n_sample, byrow = TRUE)
-  if (is.na(ind_na)) {
-  }
-  else {
-    sizefact_mat[ind_na] <- NA
-  }
+  sizefact_mat <- matrix(rep(sizefact, n_feature), n_feature, n_sample, byrow = TRUE)
+  if (is.na(ind_na)) {}
+  else {sizefact_mat[ind_na] <- NA}
   
   object_rowsum = rowSums(object, na.rm = TRUE)
   object_colsum = colSums(object, na.rm = TRUE)
   for (iter in seq_len(iterations)) {
-    if (is.na(ind_na)) {
-    }
-    else {
-      sizefact_mat[ind_na] <- 0
-    }
+    if (is.na(ind_na) ){}
+    else {sizefact_mat[ind_na] <- 0}
     #print(any(is.na(sizefact_mat)))
     featfact <- object_rowsum / Rfast::rowsums(sizefact_mat)
-    featfact_mat <-
-      matrix(rep(featfact, n_sample), n_feature, n_sample)
-    if (is.na(ind_na)) {
-    }
-    else {
-      featfact_mat[ind_na] <- NA
-    }
+    featfact_mat <- matrix(rep(featfact, n_sample), n_feature, n_sample)
+    if (is.na(ind_na) ){}
+    else {featfact_mat[ind_na] <- NA}
     
     sizefact <- object_colsum / Rfast::colsums(featfact_mat)
     names(sizefact) = colnames(object)
@@ -186,22 +158,16 @@ fitPoisBG_function = function(object,
     
     sizefact <- sizefact / scale_fac
     
-    sizefact_mat <-
-      matrix(rep(sizefact, n_feature), n_feature, n_sample, byrow = TRUE)
-    if (is.na(ind_na)) {
-    }
-    else {
-      sizefact_mat[ind_na] <- NA
-    }
+    sizefact_mat <- matrix(rep(sizefact, n_feature), n_feature, n_sample, byrow = TRUE)
+    if (is.na(ind_na) ){}
+    else {sizefact_mat[ind_na] <- NA}
     
-    message(sprintf("Iteration = %s, squared error = %e",
-                    iter,
-                    sum((
-                      sizefact - sizefact0
-                    ) ^ 2) + sum((
-                      featfact - featfact0
-                    ) ^ 2)))
-    if (sum((sizefact - sizefact0) ^ 2) + sum((featfact - featfact0) ^ 2) < tol) {
+    message(sprintf(
+      "Iteration = %s, squared error = %e",
+      iter,
+      sum((sizefact - sizefact0)^2) + sum((featfact - featfact0)^2)
+    ))
+    if (sum((sizefact - sizefact0)^2) + sum((featfact - featfact0)^2) < tol) {
       break
     }
     
@@ -234,10 +200,14 @@ fitPoisBG_function = function(object,
 #'
 #' @rdname fitPoisBG-methods
 #' @aliases fitPoisBG,matrix-method
-#'
-#'
-setMethod("fitPoisBG", "dgCMatrix", fitPoisBG_function)
-setMethod("fitPoisBG", "matrix", fitPoisBG_function)
+#' 
+#' 
+setMethod(
+  "fitPoisBG", "dgCMatrix",fitPoisBG_function
+)
+setMethod(
+  "fitPoisBG", "matrix",fitPoisBG_function
+)
 
 
 
@@ -266,99 +236,91 @@ setMethod("fitPoisBG", "matrix", fitPoisBG_function)
 #'
 setGeneric("fitPoisBG_sp",
            signature = c("object"),
-           function(object, ...)
-             standardGeneric("fitPoisBG_sp"))
+           function(object, ...) standardGeneric("fitPoisBG_sp")
+)
 
 #' @rdname fitPoisBG_sp-methods
 #' @aliases fitPoisBG_sp,matrix-method
-setMethod("fitPoisBG_sp", "matrix",
-          function(object,
-                   id,
-                   iterations = 10,
-                   tol = 1e-3,
-                   size_scale = c("sum", "first")) {
-            size_scale <- match.arg(size_scale)
-            
-            uniid <- unique(as.character(id))
-            n_feature <- NROW(object)
-            n_sample <- NCOL(object)
-            ind_na <- which(is.na(object), arr.ind = TRUE)
-            
-            sizefact <- Rfast::colmeans(object, 2)
-            
-            if (size_scale == "first") {
-              scale_fac <- sizefact[1]
-            } else if (size_scale == "sum") {
-              scale_fac <- sum(sizefact)
-            }
-            
-            
-            sizefact <- sizefact / scale_fac
-            
-            sizefact0 <- sizefact
-            sizefact_mat <-
-              matrix(rep(sizefact, n_feature), n_feature, n_sample, byrow = TRUE)
-            sizefact_mat[ind_na] <- NA
-            featfact0 <- matrix(0, n_feature, length(uniid))
-            tmp_obj = object
-            tmp_obj[ind_na] = 0
-            
-            tmp_sizefact_mat = sizefact_mat
-            tmp_sizefact_mat[ind_na] = 0
-            for (iter in seq_len(iterations)) {
-              #featfact <- sapply(uniid, function(x) {
-              # apply(object[, x == id, drop = FALSE], 1, sum, na.rm = TRUE) /
-              #   apply(sizefact_mat[, x == id, drop = FALSE], 1, sum, na.rm = TRUE)
-              featfact <- sapply(uniid, function(x) {
-                rowSums(tmp_obj[, x == id, drop = FALSE], na.rm = TRUE) /
-                  rowSums(sizefact_mat[, x == id, drop = FALSE], na.rm = TRUE)
-              })
-              
-              featfact_mat <- featfact[, id]
-              featfact_mat[ind_na] <- NA
-              tmp_featfact_mat = featfact_mat
-              tmp_featfact_mat[ind_na] = 0
-              #sizefact <- apply(object, 2, sum, na.rm = TRUE) / apply(featfact_mat, 2, sum, na.rm = TRUE)
-              sizefact <-
-                colSums(tmp_obj, na.rm = TRUE) / colSums(tmp_featfact_mat, na.rm = TRUE)
-              if (size_scale == "first") {
-                scale_fac <- sizefact[1]
-              } else if (size_scale == "sum") {
-                scale_fac <- sum(sizefact)
-              }
-              
-              sizefact <- sizefact / scale_fac
-              
-              
-              sizefact_mat <-
-                matrix(rep(sizefact, n_feature), n_feature, n_sample, byrow = TRUE)
-              sizefact_mat[ind_na] <- NA
-              
-              message(sprintf("Iteration = %s, squared error = %e",
-                              iter,
-                              sum((
-                                sizefact - sizefact0
-                              ) ^ 2) + sum((
-                                featfact - featfact0
-                              ) ^ 2)))
-              
-              if (sum((sizefact - sizefact0) ^ 2) + sum((featfact - featfact0) ^
-                                                        2) < tol) {
-                break
-              }
-              
-              sizefact0 <- sizefact
-              featfact0 <- featfact
-            }
-            message("Model converged.")
-            
-            return(list(
-              sizefact = sizefact,
-              featfact = featfact,
-              countmat = object,
-              id = id
-            ))
-          })
+setMethod(
+  "fitPoisBG_sp", "matrix",
+  function(object, id, iterations = 10, tol = 1e-3, size_scale = c("sum", "first")) {
+    size_scale <- match.arg(size_scale)
+    
+    uniid <- unique(as.character(id))
+    n_feature <- NROW(object)
+    n_sample <- NCOL(object)
+    ind_na <- which(is.na(object), arr.ind = TRUE)
+    
+    sizefact <- Rfast::colmeans(object, 2)
+    
+    if (size_scale == "first") {
+      scale_fac <- sizefact[1]
+    } else if (size_scale == "sum") {
+      scale_fac <- sum(sizefact)
+    }
+    
+    
+    sizefact <- sizefact / scale_fac
+    
+    sizefact0 <- sizefact
+    sizefact_mat <- matrix(rep(sizefact, n_feature), n_feature, n_sample, byrow = TRUE)
+    sizefact_mat[ind_na] <- NA
+    featfact0 <- matrix(0, n_feature, length(uniid))
+    tmp_obj = object
+    tmp_obj[ind_na] = 0
+
+    tmp_sizefact_mat = sizefact_mat
+    tmp_sizefact_mat[ind_na] = 0
+    for (iter in seq_len(iterations)) {
+      #featfact <- sapply(uniid, function(x) {
+      # apply(object[, x == id, drop = FALSE], 1, sum, na.rm = TRUE) /
+      #   apply(sizefact_mat[, x == id, drop = FALSE], 1, sum, na.rm = TRUE)
+      featfact <- sapply(uniid, function(x) {
+        rowSums(tmp_obj[, x == id, drop = FALSE], na.rm=TRUE) /
+          rowSums(sizefact_mat[, x == id, drop = FALSE], na.rm=TRUE)
+      })
+      
+      featfact_mat <- featfact[, id]
+      featfact_mat[ind_na] <- NA
+      tmp_featfact_mat = featfact_mat
+      tmp_featfact_mat[ind_na] = 0
+      #sizefact <- apply(object, 2, sum, na.rm = TRUE) / apply(featfact_mat, 2, sum, na.rm = TRUE)
+      sizefact <- colSums(tmp_obj, na.rm=TRUE) / colSums(tmp_featfact_mat, na.rm=TRUE)
+      if (size_scale == "first") {
+        scale_fac <- sizefact[1]
+      } else if (size_scale == "sum") {
+        scale_fac <- sum(sizefact)
+      }
+      
+      sizefact <- sizefact / scale_fac
+      
+      
+      sizefact_mat <- matrix(rep(sizefact, n_feature), n_feature, n_sample, byrow = TRUE)
+      sizefact_mat[ind_na] <- NA
+      
+      message(sprintf(
+        "Iteration = %s, squared error = %e",
+        iter,
+        sum((sizefact - sizefact0)^2) + sum((featfact - featfact0)^2)
+      ))
+      
+      if (sum((sizefact - sizefact0)^2) + sum((featfact - featfact0)^2) < tol) {
+        break
+      }
+      
+      sizefact0 <- sizefact
+      featfact0 <- featfact
+    }
+    message("Model converged.")
+    
+    return(list(
+      sizefact = sizefact,
+      featfact = featfact,
+      countmat = object,
+      id = id
+    ))
+  }
+)
 
 
 #' Perform diagnosis on Poisson background model
@@ -405,130 +367,104 @@ setMethod("fitPoisBG_sp", "matrix",
 
 setGeneric("diagPoisBG",
            signature = c("object"),
-           function(object, ...)
-             standardGeneric("diagPoisBG"))
+           function(object, ...) standardGeneric("diagPoisBG")
+)
 
 #' @rdname diagPoisBG-methods
 #' @aliases diagPoisBG,NanoStringGeoMxSet-method
-setMethod("diagPoisBG", "NanoStringGeoMxSet",
-          function(object,
-                   split = FALSE,
-                   padj = FALSE,
-                   padj_method = "BH",
-                   cutoff = 1e-6,
-                   generate_ppplot = TRUE) {
-            negdat <-
-              object[which(Biobase::fData(object)$CodeClass == "Negative"),]
-            countmat <- Biobase::exprs(negdat)
-            pDat <- Biobase::pData(negdat)
-            fDat <- Biobase::fData(negdat)
-            
-            if (isFALSE(split)) {
-              if (!any(c(
-                "sizefact" %in% colnames(pDat),
-                "featfact" %in% colnames(fDat)
-              ))) {
-                stop(
-                  "Please run `fitPoisBG` first. If you run `fitPoisBG` before, please specify `split = TRUE`."
-                )
-              }
-              sizefact <- setNames(pDat[["sizefact"]], rownames(pDat))
-              featfact <- setNames(fDat[["featfact"]], rownames(fDat))
-              
-              BGmod <- list(sizefact = sizefact,
-                            featfact = featfact,
-                            countmat = countmat)
-            } else {
-              if (!any(c(
-                "sizefact_sp" %in% colnames(pDat),
-                "featfact_" %in% colnames(fDat)
-              ))) {
-                stop("Please run `fitPoisBG` first with `groupvar`.")
-              }
-              sizefact <- setNames(pDat[["sizefact_sp"]], rownames(pDat))
-              featfact <- fDat[, grep("featfact_", colnames(fDat))]
-              colnames(featfact) <-
-                gsub("featfact_", "", colnames(featfact))
-              idvar <- Biobase::notes(object)[["fitPoisBG_sp_var"]]
-              id <- pDat[[idvar]]
-              message(sprintf("The results are based on stored `groupvar`, %s", idvar))
-              
-              BGmod <- list(
-                sizefact = sizefact,
-                featfact = as.matrix(featfact),
-                countmat = countmat,
-                id = id
-              )
-            }
-            
-            
-            result <- diagPoisBG(
-              BGmod,
-              padj = padj,
-              padj_method = padj_method,
-              cutoff = cutoff,
-              generate_ppplot = generate_ppplot
-            )
-            
-            # add lowtail matrix
-            lowtail_mat <- matrix(
-              NA,
-              nrow = nrow(object),
-              ncol = ncol(object),
-              dimnames = dimnames(object)
-            )
-            lowtail_mat[rownames(result$uptail_prob), colnames(result$uptail_prob)] <-
-              result$uptail_prob
-            Biobase::assayDataElement(object, "lowtail_prob") <- lowtail_mat
-            
-            # add uptail matrix
-            uptail_mat <- matrix(
-              NA,
-              nrow = nrow(object),
-              ncol = ncol(object),
-              dimnames = dimnames(object)
-            )
-            uptail_mat[rownames(result$uptail_prob), colnames(result$uptail_prob)] <-
-              result$uptail_prob
-            Biobase::assayDataElement(object, "uptail_prob") <- uptail_mat
-            
-            # add disper parameter
-            if (isTRUE(split)) {
-              Biobase::notes(object)$disper_sp <- result$disper
-            } else {
-              Biobase::notes(object)$disper <- result$disper
-            }
-            
-            # add upper tail outlier
-            low_outlier_mat <- matrix(
-              0,
-              nrow = nrow(object),
-              ncol = ncol(object),
-              dimnames = dimnames(object)
-            )
-            for (i in seq_len(nrow(result$outlier$low_outlier))) {
-              low_outlier_mat[rownames(result$outlier$low_outlier)[i], result$outlier$low_outlier[i, "col"]] <-
-                1
-            }
-            Biobase::assayDataElement(object, "low_outlier") <-
-              low_outlier_mat
-            
-            # add lower tail outlier
-            up_outlier_mat <- matrix(
-              0,
-              nrow = nrow(object),
-              ncol = ncol(object),
-              dimnames = dimnames(object)
-            )
-            for (i in seq_len(nrow(result$outlier$up_outlier))) {
-              up_outlier_mat[rownames(result$outlier$up_outlier)[i], result$outlier$up_outlier[i, "col"]] <-
-                1
-            }
-            Biobase::assayDataElement(object, "up_outlier") <-
-              up_outlier_mat
-            
-            return(object)
-          })
+setMethod(
+  "diagPoisBG", "NanoStringGeoMxSet",
+  function(object, split = FALSE, padj = FALSE, padj_method = "BH", cutoff = 1e-6, generate_ppplot = TRUE) {
+    negdat <- object[which(Biobase::fData(object)$CodeClass == "Negative"), ]
+    countmat <- Biobase::exprs(negdat)
+    pDat <- Biobase::pData(negdat)
+    fDat <- Biobase::fData(negdat)
+    
+    if (isFALSE(split)) {
+      if (!any(c("sizefact" %in% colnames(pDat), "featfact" %in% colnames(fDat)))) {
+        stop("Please run `fitPoisBG` first. If you run `fitPoisBG` before, please specify `split = TRUE`.")
+      }
+      sizefact <- setNames(pDat[["sizefact"]], rownames(pDat))
+      featfact <- setNames(fDat[["featfact"]], rownames(fDat))
+      
+      BGmod <- list(
+        sizefact = sizefact,
+        featfact = featfact,
+        countmat = countmat
+      )
+    } else {
+      if (!any(c("sizefact_sp" %in% colnames(pDat), "featfact_" %in% colnames(fDat)))) {
+        stop("Please run `fitPoisBG` first with `groupvar`.")
+      }
+      sizefact <- setNames(pDat[["sizefact_sp"]], rownames(pDat))
+      featfact <- fDat[, grep("featfact_", colnames(fDat))]
+      colnames(featfact) <- gsub("featfact_", "", colnames(featfact))
+      idvar <- Biobase::notes(object)[["fitPoisBG_sp_var"]]
+      id <- pDat[[idvar]]
+      message(sprintf("The results are based on stored `groupvar`, %s", idvar))
+      
+      BGmod <- list(
+        sizefact = sizefact,
+        featfact = as.matrix(featfact),
+        countmat = countmat,
+        id = id
+      )
+    }
+    
+    
+    result <- diagPoisBG(BGmod,
+                         padj = padj,
+                         padj_method = padj_method,
+                         cutoff = cutoff,
+                         generate_ppplot = generate_ppplot
+    )
+    
+    # add lowtail matrix
+    lowtail_mat <- matrix(NA,
+                          nrow = nrow(object), ncol = ncol(object),
+                          dimnames = dimnames(object)
+    )
+    lowtail_mat[rownames(result$uptail_prob), colnames(result$uptail_prob)] <- result$uptail_prob
+    Biobase::assayDataElement(object, "lowtail_prob") <- lowtail_mat
+    
+    # add uptail matrix
+    uptail_mat <- matrix(NA,
+                         nrow = nrow(object), ncol = ncol(object),
+                         dimnames = dimnames(object)
+    )
+    uptail_mat[rownames(result$uptail_prob), colnames(result$uptail_prob)] <- result$uptail_prob
+    Biobase::assayDataElement(object, "uptail_prob") <- uptail_mat
+    
+    # add disper parameter
+    if (isTRUE(split)) {
+      Biobase::notes(object)$disper_sp <- result$disper
+    } else {
+      Biobase::notes(object)$disper <- result$disper
+    }
+    
+    # add upper tail outlier
+    low_outlier_mat <- matrix(0,
+                              nrow = nrow(object), ncol = ncol(object),
+                              dimnames = dimnames(object)
+    )
+    for (i in seq_len(nrow(result$outlier$low_outlier))) {
+      low_outlier_mat[rownames(result$outlier$low_outlier)[i], result$outlier$low_outlier[i, "col"]] <- 1
+    }
+    Biobase::assayDataElement(object, "low_outlier") <- low_outlier_mat
+    
+    # add lower tail outlier
+    up_outlier_mat <- matrix(0,
+                             nrow = nrow(object), ncol = ncol(object),
+                             dimnames = dimnames(object)
+    )
+    for (i in seq_len(nrow(result$outlier$up_outlier))) {
+      up_outlier_mat[rownames(result$outlier$up_outlier)[i], result$outlier$up_outlier[i, "col"]] <- 1
+    }
+    Biobase::assayDataElement(object, "up_outlier") <- up_outlier_mat
+    
+    return(object)
+  }
+)
 
 #' Perform diagnosis on Poisson background model
 #'
@@ -553,102 +489,73 @@ setMethod("diagPoisBG", "NanoStringGeoMxSet",
 #' @rdname diagPoisBG-methods
 #' @aliases diagPoisBG,list-method
 
-setMethod("diagPoisBG", "list",
-          function(object,
-                   padj = FALSE,
-                   padj_method = "BH",
-                   cutoff = 1e-6,
-                   generate_ppplot = TRUE) {
-            countmat <- object$countmat
-            if (NCOL(object$featfact) == 1) {
-              countmat_expected <- (object$featfact %*% t(object$sizefact))
-            } else {
-              countmat_expected <-
-                sweep(object$featfact[, object$id], 2, object$sizefact, FUN = "*")
-            }
-            
-            countmat <- as.matrix(countmat)
-            
-            lowtail_prob1 <- ppois(q = countmat, lambda = countmat_expected)
-            lowtail_prob2 <-
-              ppois(q = countmat - 1, lambda = countmat_expected)
-            
-            lowtail_prob <- (lowtail_prob1 + lowtail_prob2) / 2
-            
-            uptail_prob <- 1 - lowtail_prob
-            
-            # simualte data (do it only once)
-            countmat_simu <-
-              t(apply(countmat_expected, 1, function(x)
-                rpois(rep(1, ncol(
-                  countmat
-                )), lambda = x)))
-            lowtail_prob1_simu <-
-              ppois(q = countmat_simu, lambda = countmat_expected)
-            lowtail_prob2_simu <-
-              ppois(q = countmat_simu - 1, lambda = countmat_expected)
-            lowtail_prob_simu <-
-              (lowtail_prob1_simu + lowtail_prob2_simu) / 2
-            
-            if (generate_ppplot) {
-              y <- sort(lowtail_prob, na.last = TRUE)
-              
-              y = y[!is.na(y)]
-              y = y[!is.infinite(y)]
-              
-              y_simu <- sort(lowtail_prob_simu, na.last = TRUE)
-              
-              y_simu = y_simu[!is.na(y_simu)]
-              y_simu = y_simu[!is.infinite(y_simu)]
-              
-              plot(
-                y_simu,
-                y,
-                ylim = c(0, 1),
-                xlab = "Empircal CDF from simulated data",
-                ylab = "Empircal CDF",
-                main = "Poisson model"
-              )
-              graphics::abline(a = 0, b = 1)
-            }
-            
-            # tmp_mat = (countmat - countmat_expected)^2 / countmat_expected
-            # tmp_mat[is.na(tmp_mat)] <- 0
-            # disper = sum(Rfast::colsums(tmp_mat))/length(unname(countmat))
-            disper <-
-              mean((countmat - countmat_expected) ^ 2 / countmat_expected, na.rm = TRUE)
-            
-            
-            if (padj) {
-              lowtail_prob <-
-                matrix(
-                  p.adjust(lowtail_prob, method = padj_method),
-                  nrow = nrow(lowtail_prob),
-                  ncol = ncol(lowtail_prob)
-                )
-              uptail_prob <-
-                matrix(
-                  p.adjust(uptail_prob, method = padj_method),
-                  nrow = nrow(uptail_prob),
-                  ncol = ncol(uptail_prob)
-                )
-            }
-            
-            
-            
-            low_outlier <- which(lowtail_prob < cutoff, arr.ind = TRUE)
-            up_outlier <- which(uptail_prob < cutoff, arr.ind = TRUE)
-            
-            return(
-              list(
-                lowtail_prob = lowtail_prob,
-                uptail_prob = uptail_prob,
-                disper = disper,
-                outlier = list(low_outlier = low_outlier,
-                               up_outlier = up_outlier)
-              )
-            )
-          })
+setMethod(
+  "diagPoisBG", "list",
+  function(object, padj = FALSE, padj_method = "BH", cutoff = 1e-6, generate_ppplot = TRUE) {
+    countmat <- object$countmat
+    if (NCOL(object$featfact) == 1) {
+      countmat_expected <- (object$featfact %*% t(object$sizefact))
+    } else {
+      countmat_expected <- sweep(object$featfact[, object$id], 2, object$sizefact, FUN = "*")
+    }
+    
+    countmat <- as.matrix(countmat)
+    
+    lowtail_prob1 <- ppois(q = countmat, lambda = countmat_expected)
+    lowtail_prob2 <- ppois(q = countmat - 1, lambda = countmat_expected)
+    
+    lowtail_prob <- (lowtail_prob1 + lowtail_prob2) / 2
+    
+    uptail_prob <- 1 - lowtail_prob
+    
+    # simualte data (do it only once)
+    countmat_simu <- t(apply(countmat_expected, 1, function(x) rpois(rep(1, ncol(countmat)), lambda = x)))
+    lowtail_prob1_simu <- ppois(q = countmat_simu, lambda = countmat_expected)
+    lowtail_prob2_simu <- ppois(q = countmat_simu - 1, lambda = countmat_expected)
+    lowtail_prob_simu <- (lowtail_prob1_simu + lowtail_prob2_simu) / 2
+    
+    if (generate_ppplot) {
+      y <- sort(lowtail_prob, na.last = TRUE)
+      
+      y = y[!is.na(y)]
+      y = y[!is.infinite(y)]
+      
+      y_simu <- sort(lowtail_prob_simu, na.last = TRUE)
+      
+      y_simu = y_simu[!is.na(y_simu)]
+      y_simu = y_simu[!is.infinite(y_simu)]
+      
+      plot(y_simu, y, ylim = c(0, 1), xlab = "Empircal CDF from simulated data", ylab = "Empircal CDF", main = "Poisson model")
+      graphics::abline(a = 0, b = 1)
+    }
+    
+    # tmp_mat = (countmat - countmat_expected)^2 / countmat_expected
+    # tmp_mat[is.na(tmp_mat)] <- 0
+    # disper = sum(Rfast::colsums(tmp_mat))/length(unname(countmat))
+    disper <- mean((countmat - countmat_expected)^2 / countmat_expected, na.rm = TRUE)
+    
+    
+    if (padj) {
+      lowtail_prob <- matrix(p.adjust(lowtail_prob, method = padj_method), nrow = nrow(lowtail_prob), ncol = ncol(lowtail_prob))
+      uptail_prob <- matrix(p.adjust(uptail_prob, method = padj_method), nrow = nrow(uptail_prob), ncol = ncol(uptail_prob))
+    }
+    
+    
+    
+    low_outlier <- which(lowtail_prob < cutoff, arr.ind = TRUE)
+    up_outlier <- which(uptail_prob < cutoff, arr.ind = TRUE)
+    
+    return(list(
+      lowtail_prob = lowtail_prob,
+      uptail_prob = uptail_prob,
+      disper = disper,
+      outlier = list(
+        low_outlier = low_outlier,
+        up_outlier = up_outlier
+      )
+    ))
+  }
+)
 
 #' Compute Quantile Range
 #'
@@ -689,89 +596,79 @@ setMethod("diagPoisBG", "list",
 
 setGeneric("QuanRange",
            signature = c("object"),
-           function(object, ...)
-             standardGeneric("QuanRange"))
+           function(object, ...) standardGeneric("QuanRange")
+)
 
 #' @rdname QuanRange-methods
 #' @aliases QuanRange,NanoStringGeoMxSet-method
-setMethod("QuanRange", "NanoStringGeoMxSet",
-          function(object,
-                   split = FALSE,
-                   probs,
-                   removeoutlier = FALSE,
-                   ...) {
-            fDat <- Biobase::fData(object)
-            pDat <- Biobase::pData(object)
-            # get the positive probes
-            
-            posdat <- object[-which(fDat$CodeClass == "Negative"),]
-            countmat <- Biobase::exprs(posdat)
-            
-            # get the negative probes
-            negdat <- object[which(fDat$CodeClass == "Negative"),]
-            pDatNeg <- Biobase::pData(negdat)
-            fDatNeg <- Biobase::fData(negdat)
-            
-            if (isFALSE(split)) {
-              if (!any(c(
-                "sizefact" %in% colnames(pDat),
-                "featfact" %in% colnames(fDat)
-              ))) {
-                stop(
-                  "Please run `fitPoisBG` first. If you run `fitPoisBG` before, please specify `split = TRUE`."
-                )
-              }
-              sizefact <- setNames(pDatNeg[["sizefact"]], rownames(pDatNeg))
-              featfact <- setNames(fDatNeg[["featfact"]], rownames(fDatNeg))
-              
-              BGmod <- list(sizefact = sizefact,
-                            featfact = featfact,
-                            countmat = countmat)
-            } else {
-              if (!any(c(
-                "sizefact_sp" %in% colnames(pDatNeg),
-                "featfact_" %in% colnames(fDatNeg)
-              ))) {
-                stop("Please run `fitPoisBG` first with `groupvar`.")
-              }
-              sizefact <-
-                setNames(pDatNeg[["sizefact_sp"]], rownames(pDatNeg))
-              featfact <- fDatNeg[, grep("featfact_", colnames(fDatNeg))]
-              colnames(featfact) <-
-                gsub("featfact_", "", colnames(featfact))
-              idvar <- Biobase::notes(object)[["fitPoisBG_sp_var"]]
-              id <- pDat[[idvar]]
-              message(sprintf("The results are based on stored `groupvar`, %s", idvar))
-              
-              BGmod <- list(
-                sizefact = sizefact,
-                featfact = as.matrix(featfact),
-                countmat = countmat,
-                id = id
-              )
-            }
-            
-            # calculate probenum for the dataset
-            if ("probenum" %in% fvarLabels(posdat)) {
-              probenum <- fData(posdat)[["probenum"]]
-            } else {
-              stop("No `probenum` is found. Run `aggreprobe` first.")
-            }
-            names(probenum) <- rownames(fData(posdat))
-            
-            result <- QuanRange(
-              object = countmat,
-              probenum = probenum,
-              BGmod = BGmod,
-              probs = probs,
-              removeoutlier = removeoutlier
-            )
-            
-            for (prob in as.character(probs)) {
-              object[[prob]] <- result[, prob]
-            }
-            return(object)
-          })
+setMethod(
+  "QuanRange", "NanoStringGeoMxSet",
+  function(object, split = FALSE, probs, removeoutlier = FALSE, ...) {
+    fDat <- Biobase::fData(object)
+    pDat <- Biobase::pData(object)
+    # get the positive probes
+    
+    posdat <- object[-which(fDat$CodeClass == "Negative"), ]
+    countmat <- Biobase::exprs(posdat)
+    
+    # get the negative probes
+    negdat <- object[which(fDat$CodeClass == "Negative"), ]
+    pDatNeg <- Biobase::pData(negdat)
+    fDatNeg <- Biobase::fData(negdat)
+    
+    if (isFALSE(split)) {
+      if (!any(c("sizefact" %in% colnames(pDat), "featfact" %in% colnames(fDat)))) {
+        stop("Please run `fitPoisBG` first. If you run `fitPoisBG` before, please specify `split = TRUE`.")
+      }
+      sizefact <- setNames(pDatNeg[["sizefact"]], rownames(pDatNeg))
+      featfact <- setNames(fDatNeg[["featfact"]], rownames(fDatNeg))
+      
+      BGmod <- list(
+        sizefact = sizefact,
+        featfact = featfact,
+        countmat = countmat
+      )
+    } else {
+      if (!any(c("sizefact_sp" %in% colnames(pDatNeg), "featfact_" %in% colnames(fDatNeg)))) {
+        stop("Please run `fitPoisBG` first with `groupvar`.")
+      }
+      sizefact <- setNames(pDatNeg[["sizefact_sp"]], rownames(pDatNeg))
+      featfact <- fDatNeg[, grep("featfact_", colnames(fDatNeg))]
+      colnames(featfact) <- gsub("featfact_", "", colnames(featfact))
+      idvar <- Biobase::notes(object)[["fitPoisBG_sp_var"]]
+      id <- pDat[[idvar]]
+      message(sprintf("The results are based on stored `groupvar`, %s", idvar))
+      
+      BGmod <- list(
+        sizefact = sizefact,
+        featfact = as.matrix(featfact),
+        countmat = countmat,
+        id = id
+      )
+    }
+    
+    # calculate probenum for the dataset
+    if ("probenum" %in% fvarLabels(posdat)) {
+      probenum <- fData(posdat)[["probenum"]]
+    } else {
+      stop("No `probenum` is found. Run `aggreprobe` first.")
+    }
+    names(probenum) <- rownames(fData(posdat))
+    
+    result <- QuanRange(
+      object = countmat,
+      probenum = probenum,
+      BGmod = BGmod,
+      probs = probs,
+      removeoutlier = removeoutlier
+    )
+    
+    for (prob in as.character(probs)) {
+      object[[prob]] <- result[, prob]
+    }
+    return(object)
+  }
+)
 
 
 #' Compute Quantile Range
@@ -792,61 +689,50 @@ setMethod("QuanRange", "NanoStringGeoMxSet",
 #' @rdname QuanRange-methods
 #' @aliases QuanRange,matrix-method
 
-setMethod("QuanRange", "matrix",
-          function(object,
-                   probenum,
-                   BGmod,
-                   probs,
-                   removeoutlier = FALSE) {
-            if (NCOL(BGmod$featfact) == 1) {
-              if (removeoutlier == TRUE) {
-                boxobj <- graphics::boxplot(BGmod$featfact, plot = FALSE)
-                
-                if (length(boxobj$out) > 0) {
-                  featfact <- BGmod$featfact[-which(BGmod$featfact %in% boxobj$out)]
-                } else {
-                  featfact <- BGmod$featfact
-                }
-                message(sprintf(
-                  "%s negative probes are removed prior to the score test.",
-                  length(boxobj$out)
-                ))
-              } else {
-                featfact <- BGmod$featfact
-              }
-              
-              back <- mean(featfact) * BGmod$sizefact
-            } else {
-              if (removeoutlier == TRUE) {
-                featfact <- apply(BGmod$featfact, 2, function(x) {
-                  boxobj <- graphics::boxplot(x, plot = FALSE)
-                  message(sprintf(
-                    "%s negative probes are removed prior to the score test.",
-                    length(boxobj$out)
-                  ))
-                  x[which(x %in% boxobj$out)] <- NA
-                  x
-                })
-              } else {
-                featfact <- BGmod$featfact
-              }
-              
-              back <-
-                colMeans(featfact[, BGmod$id], na.rm = TRUE) * BGmod$sizefact
-            }
-            
-            
-            
-            
-            object <- sweep(object, 1, probenum, FUN = "/")
-            
-            quan <-
-              sapply(probs, function(y)
-                apply(object, 2, function(x)
-                  quantile(x, probs = y)))
-            
-            colnames(quan) <- probs
-            quanrange <- sweep(quan, 1, back, FUN = "-")
-            
-            return(quanrange)
-          })
+setMethod(
+  "QuanRange", "matrix",
+  function(object, probenum, BGmod, probs, removeoutlier = FALSE) {
+    if (NCOL(BGmod$featfact) == 1) {
+      if (removeoutlier == TRUE) {
+        boxobj <- graphics::boxplot(BGmod$featfact, plot = FALSE)
+        
+        if (length(boxobj$out) > 0) {
+          featfact <- BGmod$featfact[-which(BGmod$featfact %in% boxobj$out)]
+        } else {
+          featfact <- BGmod$featfact
+        }
+        message(sprintf("%s negative probes are removed prior to the score test.", length(boxobj$out)))
+      } else {
+        featfact <- BGmod$featfact
+      }
+      
+      back <- mean(featfact) * BGmod$sizefact
+    } else {
+      if (removeoutlier == TRUE) {
+        featfact <- apply(BGmod$featfact, 2, function(x) {
+          boxobj <- graphics::boxplot(x, plot = FALSE)
+          message(sprintf("%s negative probes are removed prior to the score test.", length(boxobj$out)))
+          x[which(x %in% boxobj$out)] <- NA
+          x
+        })
+      } else {
+        featfact <- BGmod$featfact
+      }
+      
+      back <- colMeans(featfact[, BGmod$id], na.rm = TRUE) * BGmod$sizefact
+    }
+    
+    
+    
+    
+    object <- sweep(object, 1, probenum, FUN = "/")
+    
+    quan <- sapply(probs, function(y) apply(object, 2, function(x) quantile(x, probs = y)))
+    
+    colnames(quan) <- probs
+    quanrange <- sweep(quan, 1, back, FUN = "-")
+    
+    return(quanrange)
+  }
+)
+

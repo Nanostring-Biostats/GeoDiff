@@ -57,138 +57,106 @@ library(Matrix)
 
 setGeneric("BGScoreTest",
            signature = c("object"),
-           function(object, ...)
-             standardGeneric("BGScoreTest"))
+           function(object, ...) standardGeneric("BGScoreTest")
+)
 
 #' @rdname BGScoreTest-methods
 #' @aliases BGScoreTest,NanoStringGeoMxSet-method
-setMethod("BGScoreTest", "NanoStringGeoMxSet",
-          function(object,
-                   split = FALSE,
-                   adj = 1,
-                   removeoutlier = FALSE,
-                   useprior = FALSE) {
-            posdat <-
-              object[-which(Biobase::fData(object)$CodeClass == "Negative"), ]
-            countmat <- Biobase::exprs(posdat)
-            
-            pDat <- Biobase::pData(object)
-            fDat <- Biobase::fData(object)
-            
-            # calculate probenum for the dataset
-            if ("probenum" %in% fvarLabels(posdat)) {
-              probenum <- fData(posdat)[["probenum"]]
-            } else {
-              warning(
-                "No `probenum` is found. For targets with >1 probe, this ",
-                "is allowed in order to run `aggreprobe` with `use=\"score\"`"
-              )
-              probenum <- rep(1, nrow(posdat))
-            }
-            names(probenum) <- rownames(fData(posdat))
-            
-            if (isFALSE(split)) {
-              if (!any(c(
-                "sizefact" %in% colnames(pDat),
-                "featfact" %in% colnames(fDat)
-              ))) {
-                stop(
-                  "Please run `fitPoisBG` first. If you run `fitPoisBG` before, please specify `split = TRUE`."
-                )
-              }
-              
-              sizefact <-
-                setNames(object[["sizefact"]], Biobase::sampleNames(object))
-              featfact <-
-                setNames(fDat[["featfact"]], Biobase::featureNames(object))
-              featfact <- featfact[-which(is.na(featfact))]
-              
-              BGmod <- list(sizefact = sizefact,
-                            featfact = featfact,
-                            countmat = countmat)
-              
-              result <- BGScoreTest(
-                object = countmat,
-                BGmod = BGmod,
-                probenum = probenum,
-                adj = adj,
-                removeoutlier = removeoutlier,
-                useprior = useprior
-              )
-              
-              if (any(c("pvalues", "scores") %in% Biobase::varLabels(object))) {
-                warning("`pvalues` and `scores` exist in the phenodata. Those values are replaced.")
-              }
-              
-              Biobase::fData(object)[["pvalues"]] <- NA
-              Biobase::fData(object)[["pvalues"]][match(names(result$pvalues),
-                                                        Biobase::featureNames(object),
-                                                        nomatch = 0)] <-
-                result$pvalues
-              Biobase::fData(object)[["scores"]] <- NA
-              Biobase::fData(object)[["scores"]][match(names(result$scores),
-                                                       Biobase::featureNames(object),
-                                                       nomatch = 0)] <-
-                result$scores
-            } else {
-              if (!any(c(
-                "sizefact_sp" %in% colnames(pDat),
-                "featfact_" %in% colnames(fDat)
-              ))) {
-                stop("Please run `fitPoisBG` first with `groupvar`.")
-              }
-              
-              idvar <- Biobase::notes(object)[["fitPoisBG_sp_var"]]
-              id <- pDat[[idvar]]
-              message(sprintf("The results are based on stored `groupvar`, %s", idvar))
-              
-              sizefact <-
-                setNames(pDat[["sizefact_sp"]], Biobase::sampleNames(object))
-              featfact <- fDat[, paste0("featfact_", unique(id))]
-              featfact <-
-                featfact[which(fDat$CodeClass == "Negative"), ]
-              colnames(featfact) <-
-                gsub("featfact_", "", colnames(featfact))
-              
-              BGmod <- list(
-                sizefact = sizefact,
-                featfact = as.matrix(featfact),
-                countmat = countmat,
-                id = id
-              )
-              
-              result <- BGScoreTest_sp(
-                object = countmat,
-                BGmod = BGmod,
-                probenum = probenum,
-                adj = adj,
-                removeoutlier = removeoutlier,
-                useprior = useprior
-              )
-              
-              if (length(c(
-                grep("pvalues_", Biobase::fvarLabels(object)),
-                grep("scores_", Biobase::fvarLabels(object))
-              )) > 0) {
-                warning("`pvalues_sp` and `scores_sp` exist in the phenodata. Those values are replaced.")
-              }
-              # append results to the object
-              for (index in unique(id)) {
-                Biobase::fData(object)[[paste0("pvalues_", index)]] <- NA
-                Biobase::fData(object)[[paste0("pvalues_", index)]][match(rownames(result$pvalues),
-                                                                          Biobase::featureNames(object),
-                                                                          nomatch = 0)] <-
-                  result$pvalues[, index]
-                Biobase::fData(object)[[paste0("scores_", index)]] <-
-                  NA
-                Biobase::fData(object)[[paste0("scores_", index)]][match(rownames(result$scores_sp),
-                                                                         Biobase::featureNames(object),
-                                                                         nomatch = 0)] <-
-                  result$scores_sp[, index]
-              }
-            }
-            return(object)
-          })
+setMethod(
+  "BGScoreTest", "NanoStringGeoMxSet",
+  function(object, split = FALSE, adj = 1, removeoutlier = FALSE, useprior = FALSE) {
+    posdat <- object[-which(Biobase::fData(object)$CodeClass == "Negative"), ]
+    countmat <- Biobase::exprs(posdat)
+    
+    pDat <- Biobase::pData(object)
+    fDat <- Biobase::fData(object)
+    
+    # calculate probenum for the dataset
+    if ("probenum" %in% fvarLabels(posdat)) {
+      probenum <- fData(posdat)[["probenum"]]
+    } else {
+      warning("No `probenum` is found. For targets with >1 probe, this ",
+              "is allowed in order to run `aggreprobe` with `use=\"score\"`")
+      probenum <- rep(1, nrow(posdat))
+    }
+    names(probenum) <- rownames(fData(posdat))
+    
+    if (isFALSE(split)) {
+      if (!any(c("sizefact" %in% colnames(pDat), "featfact" %in% colnames(fDat)))) {
+        stop("Please run `fitPoisBG` first. If you run `fitPoisBG` before, please specify `split = TRUE`.")
+      }
+      
+      sizefact <- setNames(object[["sizefact"]], Biobase::sampleNames(object))
+      featfact <- setNames(fDat[["featfact"]], Biobase::featureNames(object))
+      featfact <- featfact[-which(is.na(featfact))]
+      
+      BGmod <- list(
+        sizefact = sizefact,
+        featfact = featfact,
+        countmat = countmat
+      )
+      
+      result <- BGScoreTest(
+        object = countmat,
+        BGmod = BGmod,
+        probenum = probenum,
+        adj = adj,
+        removeoutlier = removeoutlier,
+        useprior = useprior
+      )
+      
+      if (any(c("pvalues", "scores") %in% Biobase::varLabels(object))) {
+        warning("`pvalues` and `scores` exist in the phenodata. Those values are replaced.")
+      }
+      
+      Biobase::fData(object)[["pvalues"]] <- NA
+      Biobase::fData(object)[["pvalues"]][match(names(result$pvalues), Biobase::featureNames(object), nomatch = 0)] <- result$pvalues
+      Biobase::fData(object)[["scores"]] <- NA
+      Biobase::fData(object)[["scores"]][match(names(result$scores), Biobase::featureNames(object), nomatch = 0)] <- result$scores
+    } else {
+      if (!any(c("sizefact_sp" %in% colnames(pDat), "featfact_" %in% colnames(fDat)))) {
+        stop("Please run `fitPoisBG` first with `groupvar`.")
+      }
+      
+      idvar <- Biobase::notes(object)[["fitPoisBG_sp_var"]]
+      id <- pDat[[idvar]]
+      message(sprintf("The results are based on stored `groupvar`, %s", idvar))
+      
+      sizefact <- setNames(pDat[["sizefact_sp"]], Biobase::sampleNames(object))
+      featfact <- fDat[, paste0("featfact_", unique(id))]
+      featfact <- featfact[which(fDat$CodeClass == "Negative"), ]
+      colnames(featfact) <- gsub("featfact_", "", colnames(featfact))
+      
+      BGmod <- list(
+        sizefact = sizefact,
+        featfact = as.matrix(featfact),
+        countmat = countmat,
+        id = id
+      )
+      
+      result <- BGScoreTest_sp(
+        object = countmat,
+        BGmod = BGmod,
+        probenum = probenum,
+        adj = adj,
+        removeoutlier = removeoutlier,
+        useprior = useprior
+      )
+      
+      if (length(c(grep("pvalues_", Biobase::fvarLabels(object)), grep("scores_", Biobase::fvarLabels(object)))) > 0) {
+        warning("`pvalues_sp` and `scores_sp` exist in the phenodata. Those values are replaced.")
+      }
+      # append results to the object
+      for (index in unique(id)) {
+        Biobase::fData(object)[[paste0("pvalues_", index)]] <- NA
+        Biobase::fData(object)[[paste0("pvalues_", index)]][match(rownames(result$pvalues), Biobase::featureNames(object), nomatch = 0)] <- result$pvalues[, index]
+        Biobase::fData(object)[[paste0("scores_", index)]] <- NA
+        Biobase::fData(object)[[paste0("scores_", index)]][match(rownames(result$scores_sp), Biobase::featureNames(object), nomatch = 0)] <- result$scores_sp[, index]
+      }
+    }
+    return(object)
+  }
+)
 
 #' Testing for features above the background
 #'
@@ -213,163 +181,147 @@ setMethod("BGScoreTest", "NanoStringGeoMxSet",
 #' @rdname BGScoreTest-methods
 #' @aliases BGScoreTest,matrix-method
 
-setMethod("BGScoreTest", "dgCMatrix",
-          function(object,
-                   BGmod,
-                   adj = 1,
-                   probenum,
-                   removeoutlier = FALSE,
-                   useprior = FALSE) {
-            if (removeoutlier == TRUE) {
-              boxobj <- graphics::boxplot(BGmod$featfact, plot = FALSE)
-              
-              if (length(boxobj$out) > 0) {
-                featfact <- BGmod$featfact[-which(BGmod$featfact %in% boxobj$out)]
-              } else {
-                featfact <- BGmod$featfact
-              }
-              message(sprintf(
-                "%s negative probes are removed prior to the score test.",
-                length(boxobj$out)
-              ))
-            } else {
-              featfact <- BGmod$featfact
-            }
-            
-            sizefact <- BGmod$sizefact
-            
-            if (useprior == FALSE) {
-              if (missing(probenum)) {
-                prodfact <- sizefact * mean(adj * featfact)
-                
-                scores <-
-                  apply(object, 1, function(x)
-                    sum(x - prodfact) / sqrt(sum(prodfact)))
-              } else {
-                if (is.null(names(probenum)))
-                  names(probenum) <- rownames(object)
-                scores <- sapply(names(probenum),
-                                 function(feat) {
-                                   prodfact <- sizefact * mean(probenum[feat] * featfact)
-                                   sum(object[feat, ] - prodfact) / sqrt(sum(prodfact))
-                                 })
-              }
-            } else {
-              if (missing(probenum)) {
-                featfact0 <- mean(adj * featfact)
-                sigma <-
-                  var(adj * featfact) / (mean(adj * featfact)) ^ 2
-                deno <-
-                  (sizefact * sigma * featfact0 + 1) * featfact0
-                tmp = sizefact * featfact0
-                new_object_denominator = 1 / (sqrt(sum(sizefact / deno)) * deno)
-                new_object_denominator = as(new_object_denominator, "sparseMatrix")
-                quotient_A = (object) %*% new_object_denominator
-                quotient_B = tmp %*% new_object_denominator
-                quotient = quotient_A - quotient_B[1][1]
-                scores_ned = quotient[, 1]
-                names(scores_ned) = rownames(object)
-                scores = scores_ned
-                
-              } else {
-                if (is.null(names(probenum)))
-                  names(probenum) <- rownames(object)
-                
-                scores <- sapply(names(probenum),
-                                 function(feat) {
-                                   featfact0 <- mean(probenum[feat] * featfact)
-                                   sigma <-
-                                     var(probenum[feat] * featfact) / (mean(probenum[feat] * featfact)) ^ 2
-                                   deno <-
-                                     (sizefact * sigma * featfact0 + 1) * featfact0
-                                   sum((object[feat, ] - sizefact * featfact0) / deno) / sqrt(sum(sizefact / deno))
-                                 })
-              }
-            }
-            
-            pvalues <- pnorm(scores, lower.tail = FALSE)
-            
-            return(list(pvalues = pvalues,
-                        scores = scores))
-          })
-setMethod("BGScoreTest", "matrix",
-          function(object,
-                   BGmod,
-                   adj = 1,
-                   probenum,
-                   removeoutlier = FALSE,
-                   useprior = FALSE) {
-            if (removeoutlier == TRUE) {
-              boxobj <- graphics::boxplot(BGmod$featfact, plot = FALSE)
-              
-              if (length(boxobj$out) > 0) {
-                featfact <- BGmod$featfact[-which(BGmod$featfact %in% boxobj$out)]
-              } else {
-                featfact <- BGmod$featfact
-              }
-              message(sprintf(
-                "%s negative probes are removed prior to the score test.",
-                length(boxobj$out)
-              ))
-            } else {
-              featfact <- BGmod$featfact
-            }
-            
-            sizefact <- BGmod$sizefact
-            
-            if (useprior == FALSE) {
-              if (missing(probenum)) {
-                prodfact <- sizefact * mean(adj * featfact)
-                
-                scores <-
-                  apply(object, 1, function(x)
-                    sum(x - prodfact) / sqrt(sum(prodfact)))
-              } else {
-                if (is.null(names(probenum)))
-                  names(probenum) <- rownames(object)
-                scores <- sapply(names(probenum),
-                                 function(feat) {
-                                   prodfact <- sizefact * mean(probenum[feat] * featfact)
-                                   sum(object[feat, ] - prodfact) / sqrt(sum(prodfact))
-                                 })
-              }
-            } else {
-              if (missing(probenum)) {
-                featfact0 <- mean(adj * featfact)
-                sigma <-
-                  var(adj * featfact) / (mean(adj * featfact)) ^ 2
-                deno <-
-                  (sizefact * sigma * featfact0 + 1) * featfact0
-                tmp = sizefact * featfact0
-                new_object_denominator = 1 / (sqrt(sum(sizefact / deno)) * deno)
-                new_object_denominator = as(new_object_denominator, "sparseMatrix")
-                quotient_A = (object) %*% new_object_denominator
-                quotient_B = tmp %*% new_object_denominator
-                quotient = quotient_A - quotient_B[1][1]
-                scores_ned = quotient[, 1]
-                names(scores_ned) = rownames(object)
-                scores = scores_ned
-              } else {
-                if (is.null(names(probenum)))
-                  names(probenum) <- rownames(object)
-                
-                scores <- sapply(names(probenum),
-                                 function(feat) {
-                                   featfact0 <- mean(probenum[feat] * featfact)
-                                   sigma <-
-                                     var(probenum[feat] * featfact) / (mean(probenum[feat] * featfact)) ^ 2
-                                   deno <-
-                                     (sizefact * sigma * featfact0 + 1) * featfact0
-                                   sum((object[feat, ] - sizefact * featfact0) / deno) / sqrt(sum(sizefact / deno))
-                                 })
-              }
-            }
-            
-            pvalues <- pnorm(scores, lower.tail = FALSE)
-            
-            return(list(pvalues = pvalues,
-                        scores = scores))
-          })
+setMethod(
+  "BGScoreTest", "dgCMatrix",
+  function(object, BGmod, adj = 1, probenum, removeoutlier = FALSE, useprior = FALSE) {
+    if (removeoutlier == TRUE) {
+      boxobj <- graphics::boxplot(BGmod$featfact, plot = FALSE)
+      
+      if (length(boxobj$out) > 0) {
+        featfact <- BGmod$featfact[-which(BGmod$featfact %in% boxobj$out)]
+      } else {
+        featfact <- BGmod$featfact
+      }
+      message(sprintf("%s negative probes are removed prior to the score test.", length(boxobj$out)))
+    } else {
+      featfact <- BGmod$featfact
+    }
+    
+    sizefact <- BGmod$sizefact
+    
+    if (useprior == FALSE) {
+      if (missing(probenum)) {
+        prodfact <- sizefact * mean(adj * featfact)
+        
+        scores <- apply(object, 1, function(x) sum(x - prodfact) / sqrt(sum(prodfact)))
+      } else {
+        if (is.null(names(probenum))) names(probenum) <- rownames(object)
+        scores <- sapply(
+          names(probenum),
+          function(feat) {
+            prodfact <- sizefact * mean(probenum[feat] * featfact)
+            sum(object[feat, ] - prodfact) / sqrt(sum(prodfact))
+          }
+        )
+      }
+    } else {
+      if (missing(probenum)) {
+        featfact0 <- mean(adj * featfact)
+        sigma <- var(adj * featfact) / (mean(adj * featfact))^2
+        deno <- (sizefact * sigma * featfact0 + 1) * featfact0
+        tmp = sizefact * featfact0
+        new_object_denominator = 1/(sqrt(sum(sizefact / deno))*deno)
+        new_object_denominator = as(new_object_denominator, "sparseMatrix") 
+        quotient_A = (object)%*%new_object_denominator
+        quotient_B = tmp%*%new_object_denominator
+        quotient = quotient_A-quotient_B[1][1]
+        scores_ned = quotient[,1]
+        names(scores_ned) = rownames(object)
+        scores = scores_ned
+        
+      } else {
+        if (is.null(names(probenum))) names(probenum) <- rownames(object)
+        
+        scores <- sapply(
+          names(probenum),
+          function(feat) {
+            featfact0 <- mean(probenum[feat] * featfact)
+            sigma <- var(probenum[feat] * featfact) / (mean(probenum[feat] * featfact))^2
+            deno <- (sizefact * sigma * featfact0 + 1) * featfact0
+            sum((object[feat, ] - sizefact * featfact0) / deno) / sqrt(sum(sizefact / deno))
+          }
+        )
+      }
+    }
+    
+    pvalues <- pnorm(scores, lower.tail = FALSE)
+    
+    return(list(
+      pvalues = pvalues,
+      scores = scores
+    ))
+  }
+)
+setMethod(
+  "BGScoreTest", "matrix",
+  function(object, BGmod, adj = 1, probenum, removeoutlier = FALSE, useprior = FALSE) {
+    if (removeoutlier == TRUE) {
+      boxobj <- graphics::boxplot(BGmod$featfact, plot = FALSE)
+      
+      if (length(boxobj$out) > 0) {
+        featfact <- BGmod$featfact[-which(BGmod$featfact %in% boxobj$out)]
+      } else {
+        featfact <- BGmod$featfact
+      }
+      message(sprintf("%s negative probes are removed prior to the score test.", length(boxobj$out)))
+    } else {
+      featfact <- BGmod$featfact
+    }
+    
+    sizefact <- BGmod$sizefact
+    
+    if (useprior == FALSE) {
+      if (missing(probenum)) {
+        prodfact <- sizefact * mean(adj * featfact)
+        
+        scores <- apply(object, 1, function(x) sum(x - prodfact) / sqrt(sum(prodfact)))
+      } else {
+        if (is.null(names(probenum))) names(probenum) <- rownames(object)
+        scores <- sapply(
+          names(probenum),
+          function(feat) {
+            prodfact <- sizefact * mean(probenum[feat] * featfact)
+            sum(object[feat, ] - prodfact) / sqrt(sum(prodfact))
+          }
+        )
+      }
+  } else {
+    if (missing(probenum)) {
+      featfact0 <- mean(adj * featfact)
+      sigma <- var(adj * featfact) / (mean(adj * featfact))^2
+      deno <- (sizefact * sigma * featfact0 + 1) * featfact0
+      tmp = sizefact * featfact0
+      new_object_denominator = 1/(sqrt(sum(sizefact / deno))*deno)
+      new_object_denominator = as(new_object_denominator, "sparseMatrix") 
+      quotient_A = (object)%*%new_object_denominator
+      quotient_B = tmp%*%new_object_denominator
+      quotient = quotient_A-quotient_B[1][1]
+      scores_ned = quotient[,1]
+      names(scores_ned) = rownames(object)
+      scores = scores_ned
+      } else {
+        if (is.null(names(probenum))) names(probenum) <- rownames(object)
+        
+        scores <- sapply(
+          names(probenum),
+          function(feat) {
+            featfact0 <- mean(probenum[feat] * featfact)
+            sigma <- var(probenum[feat] * featfact) / (mean(probenum[feat] * featfact))^2
+            deno <- (sizefact * sigma * featfact0 + 1) * featfact0
+            sum((object[feat, ] - sizefact * featfact0) / deno) / sqrt(sum(sizefact / deno))
+          }
+        )
+      }
+    }
+    
+    pvalues <- pnorm(scores, lower.tail = FALSE)
+    
+    return(list(
+      pvalues = pvalues,
+      scores = scores
+    ))
+  }
+)
 
 #' Testing for features above the background, multiple slides case
 #'
@@ -398,108 +350,79 @@ setMethod("BGScoreTest", "matrix",
 #'
 setGeneric("BGScoreTest_sp",
            signature = c("object"),
-           function(object, ...)
-             standardGeneric("BGScoreTest_sp"))
+           function(object, ...) standardGeneric("BGScoreTest_sp")
+)
 
 #' @rdname BGScoreTest_sp-methods
 #' @aliases BGScoreTest_sp,matrix-method
-setMethod("BGScoreTest_sp", "matrix",
-          function(object,
-                   BGmod,
-                   adj = 1,
-                   probenum,
-                   removeoutlier = FALSE,
-                   useprior = FALSE) {
-            id <- BGmod$id
-            uniid <- unique(as.character(id))
-            
-            if (removeoutlier == TRUE) {
-              #   boxobj <- apply(BGmod$featfact, 2, function(x) boxplot(x, plot = FALSE))
-              
-              featfact <- apply(BGmod$featfact, 2, function(x) {
-                boxobj <- graphics::boxplot(x, plot = FALSE)
-                message(sprintf(
-                  "%s negative probes are removed prior to the score test.",
-                  length(boxobj$out)
-                ))
-                x[which(x %in% boxobj$out)] <- NA
-                x
-              })
-            } else {
-              featfact <- BGmod$featfact
-            }
-            
-            sizefact <- BGmod$sizefact
-            
-            
-            if (useprior == FALSE) {
-              if (missing(probenum)) {
-                prodfact <-
-                  lapply(uniid, function(x)
-                    sizefact[x == id] * mean(adj * featfact[, x], na.rm = TRUE))
-                names(prodfact) <- uniid
-                #   scores <- apply(countmat, 2, function(x) sum(x - ab)/sqrt(sum(ab)))
-                scores_sp <-
-                  sapply(uniid, function(x)
-                    apply(object[, x == id, drop = FALSE], 1, function(y)
-                      sum(y - prodfact[[x]]) / sqrt(sum(prodfact[[x]]))))
-              } else {
-                if (is.null(names(probenum)))
-                  names(probenum) <- rownames(object)
-                scores_sp <-
-                  sapply(names(probenum), function(feat) {
-                    prodfact <-
-                      lapply(uniid, function(x)
-                        sizefact[x == id, drop = FALSE] * mean(probenum[feat] * featfact[, x], na.rm = TRUE))
-                    names(prodfact) <- uniid
-                    #   scores <- apply(countmat, 2, function(x) sum(x - ab)/sqrt(sum(ab)))
-                    sapply(uniid, function(x)
-                      sum(object[feat, x == id, drop = FALSE] - prodfact[[x]]) / sqrt(sum(prodfact[[x]])))
-                  })
-                scores_sp <- t(scores_sp)
-              }
-            } else {
-              if (missing(probenum)) {
-                featfact0 <- colMeans(adj * featfact)#, na.rm = TRUE)
-                sigma <-
-                  apply(adj * featfact, 2, var, na.rm = TRUE) / featfact0 ^ 2
-                deno <-
-                  lapply(uniid, function(x)
-                    (sizefact[x == id] * sigma[x] * featfact0[x] + 1) * featfact0[x])
-                names(deno) <- uniid
-                
-                scores_sp <-
-                  sapply(uniid, function(x)
-                    apply(object[, x == id, drop = FALSE], 1, function(y)
-                      sum((
-                        y - sizefact[x == id] * featfact0[x]
-                      ) / deno[[x]]) / sqrt(sum(
-                        sizefact[x == id] / deno[[x]]
-                      ))))
-                #  scores <- apply(scores2, 1, mean)
-              } else {
-                if (is.null(names(probenum)))
-                  names(probenum) <- rownames(object)
-                scores_sp <-
-                  sapply(names(probenum), function(feat) {
-                    featfact0 <- colMeans(probenum[feat] * featfact, na.rm = TRUE)
-                    sigma <-
-                      apply(probenum[feat] * featfact, 2, var, na.rm = TRUE) / featfact0 ^ 2
-                    deno <-
-                      lapply(uniid, function(x)
-                        (sizefact[x == id] * sigma[x] * featfact0[x] + 1) * featfact0[x])
-                    names(deno) <- uniid
-                    
-                    sapply(uniid, function(x)
-                      sum((object[feat, x == id, drop = FALSE] - sizefact[x == id] * featfact0[x]) / deno[[x]]) / sqrt(sum(sizefact[x == id] / deno[[x]])))
-                  })
-                
-                scores_sp <- t(scores_sp)
-              }
-            }
-            
-            pvalues <- pnorm(scores_sp, lower.tail = FALSE)
-            
-            return(list(pvalues = pvalues,
-                        scores_sp = scores_sp))
-          })
+setMethod(
+  "BGScoreTest_sp", "matrix",
+  function(object, BGmod, adj = 1, probenum, removeoutlier = FALSE, useprior = FALSE) {
+    id <- BGmod$id
+    uniid <- unique(as.character(id))
+    
+    if (removeoutlier == TRUE) {
+      
+      #   boxobj <- apply(BGmod$featfact, 2, function(x) boxplot(x, plot = FALSE))
+      
+      featfact <- apply(BGmod$featfact, 2, function(x) {
+        boxobj <- graphics::boxplot(x, plot = FALSE)
+        message(sprintf("%s negative probes are removed prior to the score test.", length(boxobj$out)))
+        x[which(x %in% boxobj$out)] <- NA
+        x
+      })
+    } else {
+      featfact <- BGmod$featfact
+    }
+    
+    sizefact <- BGmod$sizefact
+    
+    
+    if (useprior == FALSE) {
+      if (missing(probenum)) {
+        prodfact <- lapply(uniid, function(x) sizefact[x == id] * mean(adj * featfact[, x], na.rm = TRUE))
+        names(prodfact) <- uniid
+        #   scores <- apply(countmat, 2, function(x) sum(x - ab)/sqrt(sum(ab)))
+        scores_sp <- sapply(uniid, function(x) apply(object[, x == id, drop = FALSE], 1, function(y) sum(y - prodfact[[x]]) / sqrt(sum(prodfact[[x]]))))
+      } else {
+        if (is.null(names(probenum))) names(probenum) <- rownames(object)
+        scores_sp <- sapply(names(probenum), function(feat) {
+          prodfact <- lapply(uniid, function(x) sizefact[x == id, drop = FALSE] * mean(probenum[feat] * featfact[, x], na.rm = TRUE))
+          names(prodfact) <- uniid
+          #   scores <- apply(countmat, 2, function(x) sum(x - ab)/sqrt(sum(ab)))
+          sapply(uniid, function(x) sum(object[feat, x == id, drop = FALSE] - prodfact[[x]]) / sqrt(sum(prodfact[[x]])))
+        })
+        scores_sp <- t(scores_sp)
+      }
+    } else {
+      if (missing(probenum)) {
+        featfact0 <- colMeans(adj * featfact)#, na.rm = TRUE)
+        sigma <- apply(adj * featfact, 2, var, na.rm = TRUE) / featfact0^2
+        deno <- lapply(uniid, function(x) (sizefact[x == id] * sigma[x] * featfact0[x] + 1) * featfact0[x])
+        names(deno) <- uniid
+        
+        scores_sp <- sapply(uniid, function(x) apply(object[, x == id, drop = FALSE], 1, function(y) sum((y - sizefact[x == id] * featfact0[x]) / deno[[x]]) / sqrt(sum(sizefact[x == id] / deno[[x]]))))
+        #  scores <- apply(scores2, 1, mean)
+      } else {
+        if (is.null(names(probenum))) names(probenum) <- rownames(object)
+        scores_sp <- sapply(names(probenum), function(feat) {
+          featfact0 <- colMeans(probenum[feat] * featfact, na.rm = TRUE)
+          sigma <- apply(probenum[feat] * featfact, 2, var, na.rm = TRUE) / featfact0^2
+          deno <- lapply(uniid, function(x) (sizefact[x == id] * sigma[x] * featfact0[x] + 1) * featfact0[x])
+          names(deno) <- uniid
+          
+          sapply(uniid, function(x) sum((object[feat, x == id, drop = FALSE] - sizefact[x == id] * featfact0[x]) / deno[[x]]) / sqrt(sum(sizefact[x == id] / deno[[x]])))
+        })
+        
+        scores_sp <- t(scores_sp)
+      }
+    }
+    
+    pvalues <- pnorm(scores_sp, lower.tail = FALSE)
+    
+    return(list(
+      pvalues = pvalues,
+      scores_sp = scores_sp
+    ))
+  }
+)
