@@ -279,7 +279,7 @@ setMethod(
 
 
 
-fitNBthDE_funct =     function(form, annot, 
+fitNBthDE_funct <- function(form, annot, 
                                object, probenum,
                                features_high, features_all, 
                                sizefact_start, sizefact_BG,
@@ -299,7 +299,7 @@ fitNBthDE_funct =     function(form, annot,
   }
   
   X <- model.matrix(form, data = annot)
-  object = Matrix::Matrix(object, sparse=TRUE)
+  object <- Matrix::Matrix(object, sparse=TRUE)
   
   sizefact0 <- sizefact <- sizefact_start
   n_sample <- nrow(X)
@@ -341,7 +341,7 @@ fitNBthDE_funct =     function(form, annot,
       # concatenate results to look like serial processing
       else{
         
-        result = mclapply(1:n_parallel, function(i) {
+        result <- mclapply(1:n_parallel, function(i) {
           my_len = length(features_high)
           start_index = (round(((i-1)*my_len/n_parallel))+1)
           end_index = round((i)*my_len/n_parallel)
@@ -350,7 +350,7 @@ fitNBthDE_funct =     function(form, annot,
             preci1, threshold_mean * probenum[features_high[start_index:end_index]], preci2,
             startpara, sizescalebythreshold, (iter == iterations))
         }, mc.cores = n_parallel)
-        new_result= list('par'=matrix(,nrow=NROW(result[[1]]$par),ncol=0),
+        new_result <- list('par'=matrix(,nrow=NROW(result[[1]]$par),ncol=0),
                          'hes',
                          'conv'=matrix(,nrow=0,ncol=1))
         for(i in result){
@@ -377,7 +377,7 @@ fitNBthDE_funct =     function(form, annot,
           startpara, sizescalebythreshold, (iter == iterations)
         )}
       else{
-        result =  mclapply(1:n_parallel, function(i) {
+        result <-  mclapply(1:n_parallel, function(i) {
           my_len = length(features_all)
           start_index = (round(((i-1)*my_len/n_parallel))+1)
           end_index = round(i*my_len/n_parallel)
@@ -386,9 +386,9 @@ fitNBthDE_funct =     function(form, annot,
             preci1, threshold_mean * probenum[features_all[start_index:end_index]], preci2,
             startpara, sizescalebythreshold, (iter == iterations))
         }, mc.cores = n_parallel)
-        new_result= list('par'=matrix(,nrow=NROW(result[[1]]$par),ncol=0),
+        new_result <- list('par'= matrix(,nrow=NROW(result[[1]]$par),ncol=0),
                          'hes',
-                         'conv'=matrix(,nrow=0,ncol=1))
+                         'conv'= matrix(,nrow=0,ncol=1))
         for(i in result){
           new_result$par = cbind(new_result$par, i$par)
           new_result$hes = c(new_result$hes, i$hes)
