@@ -162,7 +162,7 @@ test_that("fitNBthDE produces desired results, CTA", {
   
 })
 
-test_that("fitNTthDE works with dgCMatrix format",{
+test_that("fitNBthDE works with dgCMatrix format",{
   data("demoData")
   demoData <- demoData[, c(1:5, 33:37)]
   set.seed(413)
