@@ -8,10 +8,8 @@
 
 using namespace std::chrono;
 
-
-// written by Lei Yang (lyang@nanostring.com) and Ned Booker (ned@procogia.com)
 // some of the parameters are not clearly named (Ned doesn't know what biological significance they have)
-// see Lei's paper (see NBthDE_model_description.pdf in this repo).
+// (see NBthDE_model_description.pdf in this repo).
 // this code defines an optimisation function (NBthDE_paranll)
 // defines a function, given some data, that returns the optimised parameters of that function (NBthDE_paraOptfeat)
 // and defines a function to iterate through all the columns of a given 
@@ -27,17 +25,6 @@ using namespace roptim;
 // (useful for testing and development). The R code will be automatically
 // run after the compilation.
 //
-// original dnbinom_mu vector function - makes N separate calls to the built in
-// R dnbimon_mu function - this is fairly slow (calculates everything and then takes logs)
-arma::vec ref_dnbinom_mu_vec(const arma::vec &y, 
-                             const double r, 
-                             const arma::vec &tmp1){
-  int N = y.n_elem;
-  arma::vec prob(N);
-  for(int i=0; i<N; i++)
-    prob(i) = R::dnbinom_mu(y(i), r, tmp1(i), 1);
-  return(prob);
-}
 
 arma::vec approx_dnbinom_mu_vec(const arma::vec &x_vec, 
                              const double s, 
