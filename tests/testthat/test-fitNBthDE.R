@@ -519,89 +519,105 @@ test_that("coefNBth produces desired results from output of fitNBthmDE and paral
  tmp_dir <- withr::local_tempdir(pattern = "tmp_dir")
  withr::local_dir(tmp_dir)
  # Run data through (required) upstream functions
- data("kidney")
- set.seed(413)
- kidney <- kidney[, kidney$`slide name` %in% c("disease1B", "disease2B")]
- #kidney <- kidney[, c(1:10, 11:20)]
- kidney <- fitPoisBG(kidney, size_scale = "sum")
- kidney <- fitPoisBG(kidney, groupvar = "slide name", size_scale = "sum")
- all0probeidx <- which(rowSums(exprs(kidney))==0)
- kidney <- kidney[-all0probeidx, ]
- kidney <- aggreprobe(kidney, use = "cor")
- kidney <- BGScoreTest(kidney)
- # Negative and Non-Negative facets:
- kidney_neg <- kidney[which(fData(kidney)$CodeClass == "Negative"), ]
- kidney_pos <- kidney[-which(fData(kidney)$CodeClass == "Negative"), ]
- # feature factors per groupvar (i.e., slide name)
- featfact_sp <- fData(kidney_neg)[, grep("featfact_", fvarLabels(kidney_neg))]
- # scaling factors
- posdat <- Biobase::exprs(kidney_pos)
- gene_sum <- rowSums(posdat)
- features_high <- ((gene_sum > quantile(gene_sum, probs = 0.5)) & (gene_sum < quantile(gene_sum, probs = 0.95))) |>
-  which() |>
-  names()
- set.seed(123)
- genes_high <- sample(features_high, 1500) # subset
- thmean <- 1 * (featfact_sp |> colMeans())[1] # picks the first slide name's value
+ library(Rfast)
+ data("NBthDE_test_data")
  
- kidney <- fitNBth(kidney,
-                   features_high = genes_high,
-                   sizefact_BG = kidney_neg$sizefact_sp,
-                   threshold_start = thmean,
-                   iterations = 5,
-                   start_para = c(200, 1),
-                   lower_sizefact = 0,
-                   lower_threshold = 100,
-                   #threshold_fix = FALSE, # default but calling it explicitly here
-                   tol = 1e-8
- )
+ ## load data
+ #library(GeoDiff)
+ library(Matrix)
+ library(magrittr)
+ library(parallel)
+ #
+ # 1.	For each negative probe, calculate total count for all cells. Calculate the median mu.
+ mu <- median(rowSums(neg0))
+
+ # 2.	For each positive probe, calculate total count for all cells.
+ pos_count <- rowSums(raw0)
  
- ROIs_high <- sampleNames(kidney)[which(kidney$sizefact_fitNBth * thmean > 2)]
- features_all <- rownames(kidney_pos)
+ # 3.	Select positive probes with total count less than mu, call them low positive probes
+ indx_low_pos <- which(pos_count < mu)
+ mean(pos_count < mu)
  
- pData(kidney)$group <- c(rep(1, 38), rep(2, 38))
+ # 4.	Combine low positive probes and negative probes, fit the Poisson Background model, implement the common diagnostics procedure
+ negmod <- fitPoisBG(rbind(neg0, raw0[indx_low_pos, ]), size_scale = "sum") # use sum in SMI data. use first will lead to distortion in data
+ negdiag2 <- diagPoisBG(negmod, generate_ppplot = FALSE)
  
- ### Case 1:
  
- features_high <- features_all
- features_high <- ((gene_sum > quantile(gene_sum, probs = 0.5)) & (gene_sum < quantile(gene_sum, probs = 0.95))) |>
-  which() |>
+ # 5. perform score tests
+ negmod2 <- fitPoisBG(neg0, size_scale = "sum") # use sum in SMI data. use first will lead to distortion in data
+ negmod2$sizefact <- negmod$sizefact
+ 
+ sc <- GeoDiff::BGScoreTest(raw0, negmod2, adj = 1, removeoutlier = FALSE, useprior = TRUE)
+ # and maybe try different combinations of removeoutlier and useprior
+ 
+ features_high <- ((sc$scores > quantile(sc$scores, probs = 0.4)) & (sc$scores < quantile(sc$scores, probs = 0.95))) %>%
+  which() %>%
   names()
  
- NBthDEmod2 <- fitNBthDE(
-  form = ~group,
-  split = FALSE,
-  object = kidney,
-  ROIs_high = ROIs_high,
-  features_high = features_high,
-  features_all = features_all,
-  sizefact_start = kidney[, ROIs_high][["sizefact_fitNBth"]],
-  sizefact_BG = kidney[, ROIs_high][["sizefact"]],
-  preci2 = 10000,
-  prior_type = "contrast",
-  covrob = FALSE,
-  preci1con = 1 / 25,
-  sizescalebythreshold = TRUE,
-  iterations = 2,
-  run_parallel = TRUE,
-  n_parallel = detectCores())
+ # calculate the sizefact
+ # estimate a_j from the poisson threshold model
+ sizefact0 <- negmod$sizefact
+ gamma0 <- mean(negmod2$featfact)
+ gamma_features <- rowSums(raw0[features_high,]) - gamma0
+ sizefact <- (colSums(raw0[features_high,])-length(features_high)*gamma0*sizefact0)/sum(gamma_features)
+ 
+ # confirm the sum is 1
+ sum(sizefact0)
+ sum(sizefact)
+ 
+ # percentage of negative
+ sum(sizefact<0)/length(sizefact)
+ 
+ # replace negative by 0
+ sizefact[sizefact<0] <- 0
+ 
+ # rescale
+ gamma_features <- gamma_features*sum(sizefact)
+ sizefact <- sizefact/sum(sizefact)
+ #nnot = gem@cell_metadata$rna
+ annot <- as.data.frame(annot)
+ rownames(annot) <- colnames(raw0)
+ 
+ annot$fov|>table()
+ 
+ high_ROIs <- names(which(sizefact[annot$fov%in%c(1:2)]>0))
+ 
+ features_all <- rownames(raw0)
+ 
+ NBthDEmod2 <- fitNBthDE(form = ~factor(fov),
+                         annot=annot[high_ROIs, ],
+                         object=raw0[features_all,high_ROIs],
+                         probenum = rep(1, length(features_all)),
+                         features_high = features_high,
+                         features_all = features_all,
+                         sizefact_start=sizefact[high_ROIs],
+                         sizefact_BG=sizefact0[high_ROIs],
+                         threshold_mean = gamma0,
+                         preci2=10000,
+                         prior_type="contrast",
+                         covrob=FALSE,
+                         preci1con=1/25,
+                         sizefactrec=FALSE,
+                         sizescalebythreshold=TRUE,
+                         run_parallel = TRUE,
+                         n_parallel = (parallel::detectCores()))
  expect_error(
-  NBthDEmod2 <- fitNBthDE(
-   form = ~group,
-   split = FALSE,
-   object = kidney,
-   ROIs_high = ROIs_high,
-   features_high = features_high,
-   features_all = features_all,
-   sizefact_start = kidney[, ROIs_high][["sizefact_fitNBth"]],
-   sizefact_BG = kidney[, ROIs_high][["sizefact"]],
-   preci2 = 10000,
-   prior_type = "contrast",
-   covrob = FALSE,
-   preci1con = 1 / 25,
-   sizescalebythreshold = TRUE,
-   iterations = 2,
-   run_parallel = TRUE,
-   n_parallel = parallel::detectCores()+1)
- )
+  NBthDEmod2 <- fitNBthDE(form = ~factor(fov),
+                          annot=annot[high_ROIs, ],
+                          object=raw0[features_all,high_ROIs],
+                          probenum = rep(1, length(features_all)),
+                          features_high = features_high,
+                          features_all = features_all,
+                          sizefact_start=sizefact[high_ROIs],
+                          sizefact_BG=sizefact0[high_ROIs],
+                          threshold_mean = gamma0,
+                          preci2=10000,
+                          prior_type="contrast",
+                          covrob=FALSE,
+                          preci1con=1/25,
+                          sizefactrec=FALSE,
+                          sizescalebythreshold=TRUE,
+                          run_parallel = TRUE,
+                          n_parallel = (parallel::detectCores()+1)))
+ 
 })
