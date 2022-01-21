@@ -8,8 +8,10 @@
 
 using namespace std::chrono;
 
+
+// written by Lei Yang (lyang@nanostring.com) and Ned Booker (ned@procogia.com)
 // some of the parameters are not clearly named (Ned doesn't know what biological significance they have)
-// (see NBthDE_model_description.pdf in this repo).
+// see Lei's paper (see NBthDE_model_description.pdf in this repo).
 // this code defines an optimisation function (NBthDE_paranll)
 // defines a function, given some data, that returns the optimised parameters of that function (NBthDE_paraOptfeat)
 // and defines a function to iterate through all the columns of a given 
@@ -25,6 +27,17 @@ using namespace roptim;
 // (useful for testing and development). The R code will be automatically
 // run after the compilation.
 //
+// original dnbinom_mu vector function - makes N separate calls to the built in
+// R dnbimon_mu function - this is fairly slow (calculates everything and then takes logs)
+arma::vec ref_dnbinom_mu_vec(const arma::vec &y, 
+                             const double r, 
+                             const arma::vec &tmp1){
+  int N = y.n_elem;
+  arma::vec prob(N);
+  for(int i=0; i<N; i++)
+    prob(i) = R::dnbinom_mu(y(i), r, tmp1(i), 1);
+  return(prob);
+}
 
 arma::vec approx_dnbinom_mu_vec(const arma::vec &x_vec, 
                              const double s, 
@@ -65,13 +78,10 @@ public:
   arma::mat preci1; // related to preci1con (see NBthDE.R lines 311-317)
   double preci2; // (preci2 in fitNBthDE_funct in NBthDE.R (defaults to 10000))
   double threshold0; // threshold_mean * probenum[features_high]
-  arma::vec beta; //this vector is shared between the operator function and the gradient
-  arma::vec tmp0; // this vector is shared between the operator function and the gradient 
-  arma::vec tmp1; // vector is shared between the operator function and the gradient
   
   double operator()(const arma::vec &x) override {
     int n = X.n_cols;
-    beta = x(arma::span(0,n-1)); //subset of vecotr x
+    arma::vec beta = x(arma::span(0,n-1)); //subset of vecotr x
     double r = x(n);
     
     if(std::isnan(r)){ // in some instances r can go to nan, this catches that
@@ -81,12 +91,11 @@ public:
     double threshold = x(n+1);
     
     arma::vec tmpneg1 = X*beta; // calculate tmp0_i = 2^(X_ij * beta_j) in stages to speed it up 
-    tmp0 = arma::zeros<arma::vec>(tmpneg1.n_elem);
+    arma::vec tmp0 = arma::zeros<arma::vec>(tmpneg1.n_elem);
     for(int l=0;l<tmpneg1.n_elem;l++){
       tmp0(l) = pow(2.0, tmpneg1(l));
     }
-    tmp1 = alpha0*threshold+alpha%tmp0; // % here is element-wise multiplication
-    
+    arma::vec tmp1 = alpha0*threshold+alpha%tmp0; // % here is element-wise multiplication
     arma::vec llk = approx_dnbinom_mu_vec(y, r, tmp1); //rate-limiting step
 
     if (std::isinf(sum(llk))){
@@ -110,9 +119,18 @@ public:
     int m = y.n_elem;
     
     gr = arma::zeros<arma::vec>(n+2);
+    arma::vec beta = x(arma::span(0,n-1)); //subset of vecotr x
     
     double r = x(n);
     double threshold = x(n+1);
+    
+    arma::vec tmpneg1 = X*beta; // calculate tmp0_i = 2^(X_ij * beta_j) in stages to speed it up 
+    arma::vec tmp0 = arma::zeros<arma::vec>(tmpneg1.n_elem);
+    for(int l=0;l<tmpneg1.n_elem;l++){
+     tmp0(l) = pow(2.0, tmpneg1(l));
+    }
+    
+    arma::vec tmp1 = alpha0*threshold+alpha%tmp0;
     
     arma::vec tmp2 = (y/tmp1-1.0)/(1.0+tmp1/r);
     
