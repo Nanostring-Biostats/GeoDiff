@@ -396,7 +396,7 @@ setMethod(
       }
     } else {
       if (missing(probenum)) {
-        featfact0 <- colMeans(adj * featfact)#, na.rm = TRUE)
+        featfact0 <- colMeans(adj * featfact)
         sigma <- apply(adj * featfact, 2, var, na.rm = TRUE) / featfact0^2
         deno <- lapply(uniid, function(x) (sizefact[x == id] * sigma[x] * featfact0[x] + 1) * featfact0[x])
         names(deno) <- uniid
