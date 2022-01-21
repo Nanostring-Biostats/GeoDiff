@@ -289,7 +289,7 @@ fitNBthDE_funct <- function(form, annot,
                                size_scale = c("sum", "first"), sizescalebythreshold = FALSE,
                                iterations = 2, covrob = FALSE, preci1con=1/25, 
                                cutoff = 10, confac = 1, 
-                               run_parallel = FALSE, n_parallel = 8) {
+                               run_parallel = FALSE, n_parallel = 4L) {
   if (iterations == 1) {
     if (!setequal(features_high, features_all)) {
       warning("features_high and features_all need to be identical when iterations=1,
@@ -386,9 +386,9 @@ fitNBthDE_funct <- function(form, annot,
             preci1, threshold_mean * probenum[features_all[start_index:end_index]], preci2,
             startpara, sizescalebythreshold, (iter == iterations))
         }, mc.cores = n_parallel)
-        new_result <- list('par'= matrix(,nrow=NROW(result[[1]]$par),ncol=0),
+        new_result <- list('par'= matrix(,nrow=NROW(result[[1L]]$par),ncol=0L),
                          'hes',
-                         'conv'= matrix(,nrow=0,ncol=1))
+                         'conv'= matrix(,nrow=0L,ncol=1L))
         for(i in result){
           new_result$par = cbind(new_result$par, i$par)
           new_result$hes = c(new_result$hes, i$hes)
