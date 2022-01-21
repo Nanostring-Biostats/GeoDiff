@@ -477,20 +477,20 @@ test_that("coefNBth produces desired results from output of fitNBthmDE", {
   iterations = 2
  )
 
- coefmfull <- coefNBth(NBthmDEmod2, fullpara=TRUE)
- coefmreg <- coefNBth(NBthmDEmod2, fullpara=FALSE)
+ coefmfull <- coefNBth(NBthDEmod2, fullpara=TRUE)
+ coefmreg <- coefNBth(NBthDEmod2, fullpara=FALSE)
  
  ## 1. when fullpara=TRUE, the output parameters should be regression coefficients, threshold and r in a list.
  ##    Both threshold and r are positive.
  
  
- expect_true(all(c(colnames(NBthmDEmod2$X), c("r", "threshold")) == rownames(coefmfull$estimate)))
+ expect_true(all(c(colnames(NBthDEmod2$X), c("r", "threshold")) == rownames(coefmfull$estimate)))
  expect_true(all(coefmfull$estimate["r", ] > 0))
  expect_true(all(coefmfull$estimate["threshold", ] > 0))
  
  ## 2. when fullpara=FALSE, the output parameters should be regression coefficients only in a list
  
- expect_true(all(colnames(NBthmDEmod2$X) == rownames(coefmreg$estimate)))
+ expect_true(all(colnames(NBthDEmod2$X) == rownames(coefmreg$estimate)))
  
  ## 3. The user input test:statistical test, choose from c("two-sided", ">", "<")
  ## 4. In the output list, the p values of '>' and '<' for the same variable/feature should add up to 1
@@ -602,6 +602,6 @@ test_that("coefNBth produces desired results from output of fitNBthmDE and paral
    sizescalebythreshold = TRUE,
    iterations = 2,
    run_parallel = TRUE,
-   n_parallel = detectCores()+1)
+   n_parallel = parallel::detectCores()+1)
  )
 })
