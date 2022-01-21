@@ -290,6 +290,11 @@ fitNBthDE_funct <- function(form, annot,
                                iterations = 2, covrob = FALSE, preci1con=1/25, 
                                cutoff = 10, confac = 1, 
                                run_parallel = FALSE, n_parallel = 4L) {
+  if(run_parallel){
+   if(n_parallel > detectCores()){
+    stop(paste0("Not enough cores. ", parallel::detectCores(), " available, ", n_parallel, " requested."))
+   }
+  }
   if (iterations == 1) {
     if (!setequal(features_high, features_all)) {
       warning("features_high and features_all need to be identical when iterations=1,
