@@ -285,20 +285,20 @@ setMethod(
           }
         )
       }
-  } else {
-    if (missing(probenum)) {
-      featfact0 <- mean(adj * featfact)
-      sigma <- var(adj * featfact) / (mean(adj * featfact))^2
-      deno <- (sizefact * sigma * featfact0 + 1) * featfact0
-      tmp = sizefact * featfact0
-      new_object_denominator = 1/(sqrt(sum(sizefact / deno))*deno)
-      new_object_denominator = as(new_object_denominator, "sparseMatrix") 
-      quotient_A = (object)%*%new_object_denominator
-      quotient_B = tmp%*%new_object_denominator
-      quotient = quotient_A-quotient_B[1][1]
-      scores_ned = quotient[,1]
-      names(scores_ned) = rownames(object)
-      scores = scores_ned
+    } else {
+      if (missing(probenum)) {
+        featfact0 <- mean(adj * featfact)
+        sigma <- var(adj * featfact) / (mean(adj * featfact))^2
+        deno <- (sizefact * sigma * featfact0 + 1) * featfact0
+        tmp = sizefact * featfact0
+        new_object_denominator = 1/(sqrt(sum(sizefact / deno))*deno)
+        new_object_denominator = as(new_object_denominator, "sparseMatrix") 
+        quotient_A = (object)%*%new_object_denominator
+        quotient_B = tmp%*%new_object_denominator
+        quotient = quotient_A-quotient_B[1][1]
+        scores_ned = quotient[,1]
+        names(scores_ned) = rownames(object)
+        scores = scores_ned
       } else {
         if (is.null(names(probenum))) names(probenum) <- rownames(object)
         

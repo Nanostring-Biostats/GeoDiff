@@ -268,7 +268,7 @@ setMethod(
     featfact0 <- matrix(0, n_feature, length(uniid))
     tmp_obj = object
     tmp_obj[ind_na] = 0
-
+    
     tmp_sizefact_mat = sizefact_mat
     tmp_sizefact_mat[ind_na] = 0
     for (iter in seq_len(iterations)) {
