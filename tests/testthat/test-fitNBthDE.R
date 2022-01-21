@@ -162,7 +162,7 @@ test_that("fitNBthDE produces desired results, CTA", {
   
 })
 
-test_that("fitNBthDE works with dgCMatrix format",{
+test_that("fitNTthDE works with dgCMatrix format",{
   data("demoData")
   demoData <- demoData[, c(1:5, 33:37)]
   set.seed(413)
@@ -399,19 +399,209 @@ test_that("fitNBthDE produces desired results, WTA", {
   expect_true(is.vector(NBthDEmod3[["sizefact"]]))
   expect_true(length(NBthDEmod3[["sizefact"]]) == length(sizefact_start))
   expect_true(all(NBthDEmod3[["sizefact"]] == sizefact_start))
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+
   
   
 })
 
+test_that("coefNBth produces desired results from output of fitNBthmDE", {
+ library(dplyr)
+ ### Initializing CTA objects before running tests
+ # Create temporary directory that will get destroyed after this block is executed.
+ tmp_dir <- withr::local_tempdir(pattern = "tmp_dir")
+ withr::local_dir(tmp_dir)
+ # Run data through (required) upstream functions
+ data("kidney")
+ set.seed(413)
+ kidney <- kidney[, kidney$`slide name` %in% c("disease1B", "disease2B")]
+ #kidney <- kidney[, c(1:10, 11:20)]
+ kidney <- fitPoisBG(kidney, size_scale = "sum")
+ kidney <- fitPoisBG(kidney, groupvar = "slide name", size_scale = "sum")
+ all0probeidx <- which(rowSums(exprs(kidney))==0)
+ kidney <- kidney[-all0probeidx, ]
+ kidney <- aggreprobe(kidney, use = "cor")
+ kidney <- BGScoreTest(kidney)
+ # Negative and Non-Negative facets:
+ kidney_neg <- kidney[which(fData(kidney)$CodeClass == "Negative"), ]
+ kidney_pos <- kidney[-which(fData(kidney)$CodeClass == "Negative"), ]
+ # feature factors per groupvar (i.e., slide name)
+ featfact_sp <- fData(kidney_neg)[, grep("featfact_", fvarLabels(kidney_neg))]
+ # scaling factors
+ posdat <- Biobase::exprs(kidney_pos)
+ gene_sum <- rowSums(posdat)
+ features_high <- ((gene_sum > quantile(gene_sum, probs = 0.5)) & (gene_sum < quantile(gene_sum, probs = 0.95))) |>
+  which() |>
+  names()
+ set.seed(123)
+ genes_high <- sample(features_high, 1500) # subset
+ thmean <- 1 * (featfact_sp |> colMeans())[1] # picks the first slide name's value
+ 
+ kidney <- fitNBth(kidney,
+                   features_high = genes_high,
+                   sizefact_BG = kidney_neg$sizefact_sp,
+                   threshold_start = thmean,
+                   iterations = 5,
+                   start_para = c(200, 1),
+                   lower_sizefact = 0,
+                   lower_threshold = 100,
+                   #threshold_fix = FALSE, # default but calling it explicitly here
+                   tol = 1e-8
+ )
+ 
+ ROIs_high <- sampleNames(kidney)[which(kidney$sizefact_fitNBth * thmean > 2)]
+ features_all <- rownames(kidney_pos)
+ 
+ pData(kidney)$group <- c(rep(1, 38), rep(2, 38))
+ 
+ ### Case 1:
+ 
+ features_high <- features_all
+ features_high <- ((gene_sum > quantile(gene_sum, probs = 0.5)) & (gene_sum < quantile(gene_sum, probs = 0.95))) |>
+  which() |>
+  names()
+ 
+ NBthDEmod2 <- fitNBthDE(
+  form = ~group,
+  split = FALSE,
+  object = kidney,
+  ROIs_high = ROIs_high,
+  features_high = features_high,
+  features_all = features_all,
+  sizefact_start = kidney[, ROIs_high][["sizefact_fitNBth"]],
+  sizefact_BG = kidney[, ROIs_high][["sizefact"]],
+  preci2 = 10000,
+  prior_type = "contrast",
+  covrob = FALSE,
+  preci1con = 1 / 25,
+  sizescalebythreshold = TRUE,
+  iterations = 2
+ )
+
+ coefmfull <- coefNBth(NBthmDEmod2, fullpara=TRUE)
+ coefmreg <- coefNBth(NBthmDEmod2, fullpara=FALSE)
+ 
+ ## 1. when fullpara=TRUE, the output parameters should be regression coefficients, threshold and r in a list.
+ ##    Both threshold and r are positive.
+ 
+ 
+ expect_true(all(c(colnames(NBthmDEmod2$X), c("r", "threshold")) == rownames(coefmfull$estimate)))
+ expect_true(all(coefmfull$estimate["r", ] > 0))
+ expect_true(all(coefmfull$estimate["threshold", ] > 0))
+ 
+ ## 2. when fullpara=FALSE, the output parameters should be regression coefficients only in a list
+ 
+ expect_true(all(colnames(NBthmDEmod2$X) == rownames(coefmreg$estimate)))
+ 
+ ## 3. The user input test:statistical test, choose from c("two-sided", ">", "<")
+ ## 4. In the output list, the p values of '>' and '<' for the same variable/feature should add up to 1
+ coeffull <- contrastNBth(NBthDEmod2)
+ coeftest <- contrastNBth(NBthDEmod2, method=matrix(c(0,1), 2, 1), baseline=0)
+ 
+ coeftestupper <- contrastNBth(NBthDEmod2, method=matrix(c(0,1), 2, 1), baseline=0, test = ">")
+ 
+ coeftestlower <- contrastNBth(NBthDEmod2, method=matrix(c(0,1), 2, 1), baseline=0, test = "<")
+ 
+ 
+ 
+ expect_true(all(coeffull$estimate[2,] == coeftest$estimate[1,]))
+ 
+ ## 3. In the output list, the p values of '>' and '<' for the same variable/feature should add up to 1
+ 
+ expect_equal(unname(coeftestlower$p_value+coeftestupper$p_value),
+              rep(1, length(coeftestlower$p_value)))
+})
+
+
+test_that("coefNBth produces desired results from output of fitNBthmDE and parallel works properly", {
+ library(dplyr)
+ ### Initializing CTA objects before running tests
+ # Create temporary directory that will get destroyed after this block is executed.
+ tmp_dir <- withr::local_tempdir(pattern = "tmp_dir")
+ withr::local_dir(tmp_dir)
+ # Run data through (required) upstream functions
+ data("kidney")
+ set.seed(413)
+ kidney <- kidney[, kidney$`slide name` %in% c("disease1B", "disease2B")]
+ #kidney <- kidney[, c(1:10, 11:20)]
+ kidney <- fitPoisBG(kidney, size_scale = "sum")
+ kidney <- fitPoisBG(kidney, groupvar = "slide name", size_scale = "sum")
+ all0probeidx <- which(rowSums(exprs(kidney))==0)
+ kidney <- kidney[-all0probeidx, ]
+ kidney <- aggreprobe(kidney, use = "cor")
+ kidney <- BGScoreTest(kidney)
+ # Negative and Non-Negative facets:
+ kidney_neg <- kidney[which(fData(kidney)$CodeClass == "Negative"), ]
+ kidney_pos <- kidney[-which(fData(kidney)$CodeClass == "Negative"), ]
+ # feature factors per groupvar (i.e., slide name)
+ featfact_sp <- fData(kidney_neg)[, grep("featfact_", fvarLabels(kidney_neg))]
+ # scaling factors
+ posdat <- Biobase::exprs(kidney_pos)
+ gene_sum <- rowSums(posdat)
+ features_high <- ((gene_sum > quantile(gene_sum, probs = 0.5)) & (gene_sum < quantile(gene_sum, probs = 0.95))) |>
+  which() |>
+  names()
+ set.seed(123)
+ genes_high <- sample(features_high, 1500) # subset
+ thmean <- 1 * (featfact_sp |> colMeans())[1] # picks the first slide name's value
+ 
+ kidney <- fitNBth(kidney,
+                   features_high = genes_high,
+                   sizefact_BG = kidney_neg$sizefact_sp,
+                   threshold_start = thmean,
+                   iterations = 5,
+                   start_para = c(200, 1),
+                   lower_sizefact = 0,
+                   lower_threshold = 100,
+                   #threshold_fix = FALSE, # default but calling it explicitly here
+                   tol = 1e-8
+ )
+ 
+ ROIs_high <- sampleNames(kidney)[which(kidney$sizefact_fitNBth * thmean > 2)]
+ features_all <- rownames(kidney_pos)
+ 
+ pData(kidney)$group <- c(rep(1, 38), rep(2, 38))
+ 
+ ### Case 1:
+ 
+ features_high <- features_all
+ features_high <- ((gene_sum > quantile(gene_sum, probs = 0.5)) & (gene_sum < quantile(gene_sum, probs = 0.95))) |>
+  which() |>
+  names()
+ 
+ NBthDEmod2 <- fitNBthDE(
+  form = ~group,
+  split = FALSE,
+  object = kidney,
+  ROIs_high = ROIs_high,
+  features_high = features_high,
+  features_all = features_all,
+  sizefact_start = kidney[, ROIs_high][["sizefact_fitNBth"]],
+  sizefact_BG = kidney[, ROIs_high][["sizefact"]],
+  preci2 = 10000,
+  prior_type = "contrast",
+  covrob = FALSE,
+  preci1con = 1 / 25,
+  sizescalebythreshold = TRUE,
+  iterations = 2,
+  run_parallel = TRUE,
+  n_parallel = detectCores())
+ expect_error(
+  NBthDEmod2 <- fitNBthDE(
+   form = ~group,
+   split = FALSE,
+   object = kidney,
+   ROIs_high = ROIs_high,
+   features_high = features_high,
+   features_all = features_all,
+   sizefact_start = kidney[, ROIs_high][["sizefact_fitNBth"]],
+   sizefact_BG = kidney[, ROIs_high][["sizefact"]],
+   preci2 = 10000,
+   prior_type = "contrast",
+   covrob = FALSE,
+   preci1con = 1 / 25,
+   sizescalebythreshold = TRUE,
+   iterations = 2,
+   run_parallel = TRUE,
+   n_parallel = detectCores()+1)
+ )
+})
