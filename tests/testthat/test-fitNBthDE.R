@@ -520,7 +520,7 @@ test_that("coefNBth produces desired results from output of fitNBthmDE and paral
  withr::local_dir(tmp_dir)
  # Run data through (required) upstream functions
  library(Rfast)
- data("NBthDE_test_data")
+ data("test_data")
  
  ## load data
  #library(GeoDiff)
@@ -529,9 +529,11 @@ test_that("coefNBth produces desired results from output of fitNBthmDE and paral
  library(parallel)
  #
  # 1.	For each negative probe, calculate total count for all cells. Calculate the median mu.
+ neg0 <- test_data$neg0
  mu <- median(rowSums(neg0))
 
  # 2.	For each positive probe, calculate total count for all cells.
+ raw0 <- test_data$raw0
  pos_count <- rowSums(raw0)
  
  # 3.	Select positive probes with total count less than mu, call them low positive probes
@@ -574,7 +576,7 @@ test_that("coefNBth produces desired results from output of fitNBthmDE and paral
  # rescale
  gamma_features <- gamma_features*sum(sizefact)
  sizefact <- sizefact/sum(sizefact)
- #nnot = gem@cell_metadata$rna
+ annot <- test_data$annot
  annot <- as.data.frame(annot)
  rownames(annot) <- colnames(raw0)
  
