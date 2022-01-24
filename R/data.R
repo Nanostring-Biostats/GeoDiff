@@ -24,6 +24,19 @@
 #'
 "kidney"
 
+#' A demo dataset for GeoMx Human Whole Transcriptome Atlas (WTA) panel
+#'
+#' A demo dataset contains 276 ROIs and 18642 features
+#'
+#' @docType data
+#' @usage data(NBthDE_test_data)
+#' @format A set of lists used to test the function fitNBthDE
+#' @keywords datasets
+#' @examples
+#' data(NBthDE_test_data)
+#'
+"NBthDE_test_data"
+
 #' A demo example output list returned by function fitNBthDE
 #'
 #' A list used to demonstrate the function coefNBth
