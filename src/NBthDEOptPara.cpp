@@ -1,6 +1,21 @@
+
 #include <cmath>
 #include "GeoDiff.h"
+#include <Rcpp.h>
 #include <RcppArmadillo.h>
+#include <chrono>
+#include <iostream>
+
+using namespace std::chrono;
+
+
+// written by Lei Yang (lyang@nanostring.com) and Ned Booker (ned@procogia.com)
+// some of the parameters are not clearly named (Ned doesn't know what biological significance they have)
+// see Lei's paper (see NBthDE_model_description.pdf in this repo).
+// this code defines an optimisation function (NBthDE_paranll)
+// defines a function, given some data, that returns the optimised parameters of that function (NBthDE_paraOptfeat)
+// and defines a function to iterate through all the columns of a given 
+
 // [[Rcpp::depends(RcppArmadillo)]]
 
 #include <roptim.h>
@@ -12,172 +27,145 @@ using namespace roptim;
 // (useful for testing and development). The R code will be automatically
 // run after the compilation.
 //
+// original dnbinom_mu vector function - makes N separate calls to the built in
+// R dnbimon_mu function - this is fairly slow (calculates everything and then takes logs)
+arma::vec ref_dnbinom_mu_vec(const arma::vec &y, 
+                             const double r, 
+                             const arma::vec &tmp1){
+  int N = y.n_elem;
+  arma::vec prob(N);
+  for(int i=0; i<N; i++)
+    prob(i) = R::dnbinom_mu(y(i), r, tmp1(i), 1);
+  return(prob);
+}
 
-
-
-
-
+arma::vec approx_dnbinom_mu_vec(const arma::vec &x_vec, 
+                             const double s, 
+                             const arma::vec &mu_vec){
+  //function based on reading the #$%^& R documents of dnbinom!!!
+  //everything is already logarithmic - separates out what can be
+  //precalculated
+  // prob(x,s,mu) = ((s+x-1) choose (s-1))*p^s *(1-p)^x
+  
+  int N = x_vec.n_elem;
+  arma::vec prob(N);
+  double s_binom = lgamma(s);
+  double p =0;
+  for(int i=0; i<N; i++){
+    if (x_vec(i)==0 && mu_vec(i)==0){
+      prob(i) = 0;
+    }
+    else{
+      p = s/(s+mu_vec(i));
+      prob(i) = lgamma(s+x_vec(i)) - s_binom - lgamma(x_vec(i)+1) + s*log(p) + x_vec(i)*log(1-p);
+    }
+    if(std::isinf(prob(i))){ // in some instances prob can go to -inf, this catches that
+      prob(i) = 0; //check this doesn't wreck everything
+    }
+    if(std::isnan(prob(i))){ // in some instances prob can go to nan, this catches that
+      prob(i) = 0; //check this doesn't wreck everything
+    }
+  }
+  return(prob);
+}
 
 class NBthDE_paranll : public Functor {
 public:
-  arma::vec y;
-  arma::mat X;
-  arma::vec alpha0;
-  arma::vec alpha;
-  arma::mat preci1;
-  double preci2;
-  double threshold0;
-
-
+  arma::vec y; //column of t(object[features_high, ]) in R code (fitNBthDE_funct in NBthDE.R)
+  arma::mat X; // X = model.matrix(form, data = annot) in R code (fitNBthDE_funct in NBthDE.R)
+  arma::vec alpha0; // sizefact_BG in R code
+  arma::vec alpha; // sizefact in R code
+  arma::mat preci1; // related to preci1con (see NBthDE.R lines 311-317)
+  double preci2; // (preci2 in fitNBthDE_funct in NBthDE.R (defaults to 10000))
+  double threshold0; // threshold_mean * probenum[features_high]
+  
   double operator()(const arma::vec &x) override {
     int n = X.n_cols;
-    int m = y.n_elem;
-    arma::vec beta = x(arma::span(0,n-1));
+    arma::vec beta = x(arma::span(0,n-1)); //subset of vecotr x
     double r = x(n);
+    
+    if(std::isnan(r)){ // in some instances r can go to nan, this catches that
+      throw 20;
+    }
+    
     double threshold = x(n+1);
+    
+    arma::vec tmpneg1 = X*beta; // calculate tmp0_i = 2^(X_ij * beta_j) in stages to speed it up 
+    arma::vec tmp0 = arma::zeros<arma::vec>(tmpneg1.n_elem);
+    for(int l=0;l<tmpneg1.n_elem;l++){
+      tmp0(l) = pow(2.0, tmpneg1(l));
+    }
+    arma::vec tmp1 = alpha0*threshold+alpha%tmp0; // % here is element-wise multiplication
+    arma::vec llk = approx_dnbinom_mu_vec(y, r, tmp1); //rate-limiting step
 
-
-    arma::vec tmp0 = arma::exp2(X*beta);
-    arma::vec tmp1 = alpha0*threshold+alpha%tmp0;
-
-
-    arma::vec llk = dnbinom_mu_vec(y, r, tmp1, 1);
-
- //   Rcout << "mean(llk.row(0))" << arma::mean(llk.row(0)) << "\n";
-    //arma::mat pen
+    if (std::isinf(sum(llk))){
+      throw 20;
+    }
+    
+    if (std::isnan(sum(llk))){
+      throw 20;
+    }
     arma::mat pen10 = beta.t()*preci1*beta;
+    
     double pen1 = pen10(0,0)/2.0;
-    //+nmh*(1.0/2.0)*pow((threshold-threshold0),2)*preci2
-    return(-arma::sum(llk)+pen1+(1.0/2.0)*pow((threshold-threshold0),2)*preci2);
+    
+    double result = -arma::sum(llk)+pen1+(1.0/2.0)*pow((threshold-threshold0),2)*preci2;
+    
+    return(result);
   }
-
-
-
+ 
   void Gradient(const arma::vec &x, arma::vec &gr) override {
     int n = X.n_cols;
     int m = y.n_elem;
-
-
+    
     gr = arma::zeros<arma::vec>(n+2);
-
-    arma::vec beta = x(arma::span(0,n-1));
-
+    arma::vec beta = x(arma::span(0,n-1)); //subset of vecotr x
+    
     double r = x(n);
     double threshold = x(n+1);
-
-
-    arma::vec tmp0 = arma::exp2(X*beta);
-
- //   Rcout << "tmp0:" << tmp0(arma::span(0,4)) << "\n";
-
+    
+    arma::vec tmpneg1 = X*beta; // calculate tmp0_i = 2^(X_ij * beta_j) in stages to speed it up 
+    arma::vec tmp0 = arma::zeros<arma::vec>(tmpneg1.n_elem);
+    for(int l=0;l<tmpneg1.n_elem;l++){
+     tmp0(l) = pow(2.0, tmpneg1(l));
+    }
+    
     arma::vec tmp1 = alpha0*threshold+alpha%tmp0;
-
- //   Rcout << "tmp1:" << tmp1(arma::span(0,4)) << "\n";
-
+    
     arma::vec tmp2 = (y/tmp1-1.0)/(1.0+tmp1/r);
-
- //   Rcout << "tmp2:" << tmp2(arma::span(0,4)) << "\n";
-
-    gr(arma::span(0,n-1)) = (-log(2.0)*(tmp2%alpha%tmp0).t()*X+beta.t()*preci1).t();
-
-    arma::vec pLr = -arma::log(1.0+tmp1/r);
-
-    for(int k = 0; k < y.n_elem; k++){
+    
+    gr(arma::span(0,n-1)) = -log(2.0)*X.t()*(tmp2%alpha%tmp0)+preci1.t()*beta;  //rate-limiting step
+    
+    arma::vec tmp4 = 1 + tmp1/r;//rate-limiting step
+    arma::vec pLr = arma::zeros<arma::vec>(tmp4.n_elem);
+    for(int k = 0; k < m; k++){
+      pLr(k) = -log(tmp4(k));
       for(int j = 0; j < y(k); j++){
         pLr(k) += 1.0/(j+r);
       }
     }
 
+    
     pLr += -(y-tmp1)/(r+tmp1);
-
     gr(n) = -arma::sum(pLr);
-
     arma::mat tmp3 = tmp2.t()*alpha0;
+    
     gr(n+1) = -tmp3(0,0)+(threshold-threshold0)*preci2;
-
-//    Rcout << "gr:" << gr << "\n";
-    }
-
+    
+  }
+  
 };
-
-// // [[Rcpp::export]]
-// double test(arma::mat X, arma::vec y, arma::vec& alpha0,
-//             arma::vec alpha, arma::vec x, arma::mat preci1,
-//             double threshold0, double preci2){
-//   NBthDE_paranll f;
-//   f.X=X;
-//   f.y=y;
-//   f.alpha0 = alpha0;
-//   f.alpha = alpha;
-//   f.preci1=preci1;
-//   f.threshold0=threshold0;
-//   f.preci2=preci2;
-//
-//   return(f(x));
-// }
-//
-// // [[Rcpp::export]]
-// arma::vec test2(arma::mat X, arma::vec y, arma::vec alpha0,
-//             arma::vec alpha, arma::vec x, arma::mat preci1,
-//             double threshold0, double preci2){
-//   int n = X.n_cols;
-//   int m = y.n_elem;
-//
-//
-//   arma::vec gr = arma::zeros<arma::vec>(n+2);
-//
-//   arma::vec beta = x(arma::span(0,n-1));
-//
-//   double r = x(n);
-//   double threshold = x(n+1);
-//
-//
-//   arma::vec tmp0 = arma::exp2(X*beta);
-//
-//   //   Rcout << "tmp0:" << tmp0(arma::span(0,4)) << "\n";
-//
-//   arma::vec tmp1 = alpha0*threshold+alpha%tmp0;
-//
-//   //   Rcout << "tmp1:" << tmp1(arma::span(0,4)) << "\n";
-//
-//   arma::vec tmp2 = (y/tmp1-1.0)/(1.0+tmp1/r);
-//
-//   //   Rcout << "tmp2:" << tmp2(arma::span(0,4)) << "\n";
-//
-//   gr(arma::span(0,n-1)) = (-log(2.0)*(tmp2%alpha%tmp0).t()*X+beta.t()*preci1).t();
-//
-//   arma::vec pLr = -arma::log(1.0+tmp1/r);
-//
-//   for(int k = 0; k < y.n_elem; k++){
-//     for(int j = 0; j < y(k); j++){
-//       pLr(k) += 1.0/(j+r);
-//     }
-//   }
-//
-//   pLr += -(y-tmp1)/(r+tmp1);
-//
-//   gr(n) = -arma::sum(pLr);
-//
-//   arma::mat tmp3 = tmp2.t()*alpha0;
-//   gr(n+1) = -tmp3(0,0)+(threshold-threshold0)*preci2;
-//
-//   Rcout << "gr:" << gr << "\n";
-//
-//   return(gr);
-// }
-
-
-
+                         
 // [[Rcpp::export]]
-List NBthDE_paraOptfeat(arma::mat& X,
-               arma::vec y,
-               arma::vec alpha0,
-               arma::vec alpha,
-               arma::mat& preci1,
-               double threshold0,
-               double preci2,
-               arma::vec& x0,
-               bool calhes) {
+List NBthDE_paraOptfeat(arma::mat& X, //X = model.matrix(form, data = annot) in R code (fitNBthDE_funct in NBthDE.R)
+                        arma::vec y, //data vector part of t(object[features_high, ]) in R code (fitNBthDE_funct in NBthDE.R)
+                        arma::vec alpha0, //sizefact_BG in R code
+                        arma::vec alpha,//sizefact in R code
+                        arma::mat& preci1, //related to preci1con (see NBthDE.R lines 311-317)
+                        double threshold0, //threshold_mean * probenum[features_high]
+                        double preci2, //(preci2 in fitNBthDE_funct in NBthDE.R (defaults to 10000))
+                        arma::vec& x0, //startpara <- c(rep(0, ncol(X)), 1, (1.0 or threshold_mean))
+                        bool calhes) { //(iter == iterations) (see fitNBthDE_funct in NBthDE.R for details)
   NBthDE_paranll f;
   f.X=X;
   f.y=y;
@@ -186,117 +174,103 @@ List NBthDE_paraOptfeat(arma::mat& X,
   f.preci1=preci1;
   f.threshold0=threshold0;
   f.preci2=preci2;
-
+  
   int n = X.n_cols;
-
-
   arma::vec lower = arma::ones<arma::vec>(n+2) * (-100);
   lower(n) = 0.01;
   lower(n+1) = 0.01;
   arma::vec upper = arma::ones<arma::vec>(n+2) * 100;
   upper(n) = 1000;
   upper(n+1) = 1000000;
-
+  
   Roptim<NBthDE_paranll> opt("L-BFGS-B");
   opt.set_lower(lower);
   opt.set_upper(upper);
-  //opt.control.maxit = maxit;
-
+  
+  
   opt.set_hessian(calhes);
-
- // opt.set_hessian(true);
+  
   opt.control.pgtol=1e-3;
   arma::vec x = x0;
-   // arma::zeros<arma::vec>(n+2);
-  // x(arma::span(0,n-1))=arma::solve(X, arma::log2(y/alpha + 0.001));
-  // x(n) = 1;
-  // x(n+1)=threshold0;
-
+  
   opt.minimize(f, x);
-
-  // arma::mat hes = opt.hessian();
-  // double hes_det = arma::log_det(hes);
-  // double hes_det1 = arma::log_det(hes(arma::span(1,n-1), arma::span(1,n-1)));
-
+  
+  
   return List::create(Named("par") = opt.par(),
                       Named("conv") = opt.convergence(),
                       Named("hes") = opt.hessian());
-
-
+  
+  
 }
-
-
-
 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
-List NBthDE_paraOptall(arma::mat& Y,
-                   arma::mat& X,
-                   arma::vec& alpha0,
-                   arma::vec& alpha,
-                   arma::mat& preci1,
-                   arma::vec& threshold0,
-                   double preci2,
-                   arma::vec& x0,
-                   bool sizescale,
-                   bool calhes){
-
+List NBthDE_paraOptall(arma::sp_mat &Y, //t(object[features_high, ]) in R code (fitNBthDE_funct in NBthDE.R)
+                       arma::mat &X, // X = model.matrix(form, data = annot) in R code (fitNBthDE_funct in NBthDE.R)
+                       arma::vec &alpha0, //sizefact_BG in R code
+                       arma::vec &alpha, //sizefact in R code
+                       arma::mat &preci1, //related to preci1con (see NBthDE.R lines 311-317)
+                       arma::vec &threshold0, //threshold_mean * probenum[features_high]
+                       double preci2, //(preci2 in fitNBthDE_funct in NBthDE.R (defaults to 10000))
+                       arma::vec &x0, //startpara <- c(rep(0, ncol(X)), 1, (1.0 or threshold_mean))
+                       bool sizescale, //sizescalebythreshold (defaults to FALSE)
+                       bool calhes){ //(iter == iterations) (see fitNBthDE_funct in NBthDE.R for details)
+  
   int n = X.n_cols;
   int m = Y.n_cols;
+  int n_rows = Y.n_rows;
   arma::mat par(n+2,m);
   List hes(m);
-
-
+  
+  
   arma::vec conv(m);
-
+  Rcout << "number of columns: "<< m << " \n";
+  int failcount = 0;
   if(sizescale){
     for(int i=0; i < m; i++){
-      List result = NBthDE_paraOptfeat(X, Y.col(i),
-                                       threshold0(i)*alpha0, threshold0(i)*alpha,
-                                       preci1, 1.0, preci2, x0, calhes);
-
-      par.col(i) = (as<arma::vec>(result["par"]));
-      hes[i] = result["hes"];
-      conv(i) = result["conv"];
+      try{
+        arma::vec Ycol(n_rows);
+        for(int k=0; k<n_rows; k++){
+          if(Y(k,i)!=0){
+            Ycol(k)=Y(k,i);
+          }
+        }
+        
+        List result = NBthDE_paraOptfeat(X, Ycol,
+                                         threshold0(i)*alpha0, threshold0(i)*alpha,
+                                         preci1, 1.0, preci2, x0, calhes);
+        
+        par.col(i) = (as<arma::vec>(result["par"]));
+        hes[i] = result["hes"];
+        conv(i) = result["conv"];
+      }
+      catch (...){
+        failcount++;
+      }
     }
 
   } else {
     for(int i=0; i < m; i++){
-      List result = NBthDE_paraOptfeat(X, Y.col(i),
-                             alpha0, alpha,
-                             preci1, threshold0(i), preci2, x0, calhes);
-
-      par.col(i) = (as<arma::vec>(result["par"]));
-      hes[i] = result["hes"];
-      conv(i) = result["conv"];
+      try{
+        arma::vec Ycol(n_rows);
+        for(int k=0; k<n_rows; k++){
+          Ycol(k)=Y(k,i);
+        }
+        List result = NBthDE_paraOptfeat(X, Ycol,
+                                         alpha0, alpha,
+                                         preci1, threshold0(i), preci2, x0, calhes);
+        
+        par.col(i) = (as<arma::vec>(result["par"]));
+        hes[i] = result["hes"];
+        conv(i) = result["conv"];
+      }
+      catch (...){
+        failcount++;
+      }
     }
   }
+  Rcout << "failed columns: " << failcount << "\n";
   return List::create(Named("par") = par,
                       Named("conv") = conv,
                       Named("hes") = hes);
 }
-
-
-
-/*** R
-#save(mat, Z, alpha0, alpha, para_fix ,Umat, threshold0, preci2, file="testData.Rdata")
-#load("testData.Rdata")
-#test(mat, Z, Y, alpha0=alpha0,
-#     alpha=alpha, x=para_fix0, NBmod$preci1, threshold0, preci2, Umat[((1:10)*20),])
-
-
-#lik_fun2 <- lik_probe2(mat, Z, Y, alpha0=alpha0, alpha=alpha,  Umat[((1:10)*20),], threshold0, preci2)
-
-#lik_fun2(para_fix0)
-#
-# microbenchmark::microbenchmark(test(mat, Z, Y, alpha0=alpha0, alpha=alpha, x=para_fix, threshold0, preci2, Umat[((1:20)*20),]), lik_fun2(para_fix))
-#
-#
-#
-# system.time(result1<- optim(para_fix0, lik_fun2, lower=c(rep(-Inf,ncol(mat)), 0.01,0.01),
-#                 method="L-BFGS-B"))
-#
-
-#system.time(result2 <- mleprobe2(mat, Z, Y, alpha0, alpha, preci1, threshold0, preci2, Umat[((1:20)*10),], para_fix0, FALSE))
-
-*/

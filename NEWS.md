@@ -55,3 +55,6 @@ Revisions
 
 * transfer maintainership
 
+# GeoDiff 1.1.3
+
+* implement code optimizations (mostly RFast and matrix methods) to speed up execution (NBth.R, NBthDE.R, PoisBG.R, PoisthNorm.R, ScoreTest.R). Added error handling, improved matrix methods, accelerated code for NBthDEOptPara.cpp Rcpp code.

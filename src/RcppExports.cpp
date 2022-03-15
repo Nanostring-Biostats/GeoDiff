@@ -31,12 +31,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // NBthDE_paraOptall
-List NBthDE_paraOptall(arma::mat& Y, arma::mat& X, arma::vec& alpha0, arma::vec& alpha, arma::mat& preci1, arma::vec& threshold0, double preci2, arma::vec& x0, bool sizescale, bool calhes);
+List NBthDE_paraOptall(arma::sp_mat& Y, arma::mat& X, arma::vec& alpha0, arma::vec& alpha, arma::mat& preci1, arma::vec& threshold0, double preci2, arma::vec& x0, bool sizescale, bool calhes);
 RcppExport SEXP _GeoDiff_NBthDE_paraOptall(SEXP YSEXP, SEXP XSEXP, SEXP alpha0SEXP, SEXP alphaSEXP, SEXP preci1SEXP, SEXP threshold0SEXP, SEXP preci2SEXP, SEXP x0SEXP, SEXP sizescaleSEXP, SEXP calhesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< arma::sp_mat& >::type Y(YSEXP);
     Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
     Rcpp::traits::input_parameter< arma::vec& >::type alpha0(alpha0SEXP);
     Rcpp::traits::input_parameter< arma::vec& >::type alpha(alphaSEXP);
