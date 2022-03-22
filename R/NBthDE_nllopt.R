@@ -1,10 +1,4 @@
 
-
-
-
-
-
-
 NBthDE_scalenll <- function(X, Y, probenum, regcoefmat, rvec, sizefact0, threshold, sizescale, threshold_mean) {
     tmp0 <- 2^(X %*% regcoefmat)
     if (sizescale) {

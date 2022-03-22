@@ -372,7 +372,7 @@ setMethod(
         for (iter in seq_len(iterations)) {
             if (iter == 1) {
                 result <- NBthDE_paraOptall(
-                    t(object[features_high, ]), X, sizefact_BG, sizefact,
+                    t(object[features_high, ]), as.matrix(X), sizefact_BG, sizefact,
                     preci1, threshold_mean * probenum[features_high], preci2,
                     startpara, sizescalebythreshold, (iter == iterations)
                 )
