@@ -558,8 +558,157 @@ fitNBthDE_funct <- function(form, annot,
 #' @export
 #' 
 setMethod(
+<<<<<<< HEAD
   "fitNBthDE", "dgCMatrix", fitNBthDE_funct
 )
+=======
+    "fitNBthDE", "matrix",
+    function(form, annot, object, probenum,
+    features_high, features_all, sizefact_start, sizefact_BG,
+    threshold_mean, preci2=10000, lower_threshold = 0.01,
+    prior_type = c("contrast", "equal"), sizefactrec = TRUE,
+    size_scale = c("sum", "first"), sizescalebythreshold = FALSE,
+    iterations = 2, covrob = FALSE, preci1con=1/25, cutoff = 10, confac = 1) {
+        if (iterations == 1) {
+            if (!setequal(features_high, features_all)) {
+                warning("features_high and features_all need to be identical when iterations=1,
+            assign features_high <- features_all")
+            }
+            features_high <- features_all
+        }
+
+        X <- model.matrix(form, data = annot)
+
+
+        sizefact0 <- sizefact <- sizefact_start
+        n_sample <- nrow(X)
+        n_para <- ncol(X)
+        n_var <- max(attributes(X)$assign)
+        n_levels <- as.list(table(attributes(X)$assign))
+        var_ind <- as.numeric(names(n_levels))
+
+        prior_type <- match.arg(prior_type)
+        if (prior_type == "equal") {
+            preci1 <- preci1con * t(X) %*% diag(1, n_sample) %*% X
+        } else if (prior_type == "contrast") {
+            contrvec <- t(rep(1 / n_sample, n_sample)) %*% X
+
+            preci1 <- (preci1con) * t(contrvec) %*% contrvec
+        }
+
+
+
+
+        if (is.null(names(probenum))) names(probenum) <- rownames(object)
+
+        if (sizescalebythreshold) {
+            startpara <- c(rep(0, ncol(X)), 1, 1.0)
+        } else {
+            startpara <- c(rep(0, ncol(X)), 1, threshold_mean)
+        }
+
+
+        for (iter in seq_len(iterations)) {
+            if (iter == 1) {
+                result <- NBthDE_paraOptall(
+                    t(object[features_high, ]), as.matrix(X), sizefact_BG, sizefact,
+                    preci1, threshold_mean * probenum[features_high], preci2,
+                    startpara, sizescalebythreshold, (iter == iterations)
+                )
+                para <- result$par
+                colnames(para) <- features_high
+                conv <- result$conv
+                names(conv) <- features_high
+                Im <- result$hes
+                names(Im) <- features_high
+                Im0 <- Im
+                para0 <- para
+                conv0 <- conv
+            } else {
+                result <- NBthDE_paraOptall(
+                    t(object[features_all, ]), X, sizefact_BG, sizefact,
+                    preci1, threshold_mean * probenum[features_all], preci2,
+                    startpara, sizescalebythreshold, (iter == iterations)
+                )
+                para <- result$par
+                colnames(para) <- features_all
+                conv <- result$conv
+                names(conv) <- features_all
+                Im <- result$hes
+                names(Im) <- features_all
+            }
+
+            features_remain <- NA
+            if ((iterations > 1) & (iter == 1)) {
+                features_remain <- names(which(colMeans(abs(para[2:n_para, , drop = FALSE])) < cutoff))
+                if (prior_type == "equal") {
+                    if (covrob) {
+                        cov_mat <- robust::covRob(t(para[seq_len(n_para), features_remain]), na.action = na.omit)$cov
+                    } else {
+                        cov_mat <- cov(t(para[seq_len(n_para), features_remain, drop = FALSE]), use = "pairwise.complete.obs")
+                    }
+                    preci1 <- solve(cov_mat)
+                } else if (prior_type == "contrast") {
+                    if (covrob) {
+                        if (n_para == 2) {
+                            cov_mat0 <- (robust::covRob(t(para[seq_len(n_para), features_remain]), na.action = na.omit)$cov)[2:n_para, 2:n_para, drop = FALSE]
+                        } else {
+                            cov_mat0 <- robust::covRob(t(para[2:n_para, features_remain]), na.action = na.omit)$cov
+                        }
+                    } else {
+                        cov_mat0 <- cov(t(para[2:n_para, features_remain, drop = FALSE]), use = "pairwise.complete.obs")
+                    }
+
+                    contrvec <- t(rep(1 / n_sample, n_sample)) %*% X
+                    contrmat <- rbind(contrvec, cbind(rep(0, (n_para - 1)), diag(1, (n_para - 1))))
+                    preci_list <- list(`0` = diag(confac * preci1con, nrow = 1), preci_mat = solve(cov_mat0))
+                    preci10 <- Matrix::bdiag(preci_list)
+                    preci1 <- as.matrix(t(contrmat) %*% preci10 %*% contrmat)
+                }
+            }
+
+
+            if (sizefactrec) {
+                # if((EB)&(iter==1)){
+                #   genes_NA <- features_high[unique(which(is.na(para), arr.ind = TRUE)[,2])]
+                #   features_remain <- setdiff(features_high, genes_NA)
+                # } else {
+                #   genes_NA <- features_all[unique(which(is.na(para), arr.ind = TRUE)[,2])]
+                #   features_remain <- setdiff(features_all, genes_NA)
+                # }
+                size_scale <- match.arg(size_scale)
+                features_remain <- names(which(colMeans(abs(para[2:n_para, , drop = FALSE])) < cutoff))
+
+
+                for (i in seq_len(length(sizefact))) {
+                    fun <- NBthDE_scalenll(X[i, ], object[features_remain, i], probenum[features_remain], para[seq_len(n_para), features_remain], t(para[n_para + 1, features_remain]), sizefact_BG[i], para[n_para + 2, features_remain], sizescalebythreshold, threshold_mean)
+                    sizefact[i] <- optim(c(sizefact[i]), fun, lower = c(0), method = "L-BFGS-B")$par
+                }
+
+                if (size_scale == "first") {
+                    scale_fac <- sizefact[1]
+                } else if (size_scale == "sum") {
+                    scale_fac <- sum(sizefact)
+                }
+
+                sizefact <- sizefact / scale_fac
+
+                message(sprintf(
+                    "Iteration = %s, squared error = %e",
+                    iter,
+                    sum((sizefact - sizefact0)^2)
+                ))
+
+                if (iter == 1) {
+                    sizefact0 <- sizefact
+                }
+            }
+        }
+
+
+        paraname <- c(colnames(X), c("r", "threshold"))
+        rownames(para0) <- rownames(para) <- paraname
+>>>>>>> dev
 
 #' Negative Binomial threshold model for differential expression analysis
 #' @rdname fitNBthDE-methods
