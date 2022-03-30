@@ -275,7 +275,7 @@ Running the DE model with default values.
 ```{r}
 
 NBthDEmod <- fitNBthDE(form = ~region,
-                       split = FALSE,
+                      split = FALSE,
                        object = kidney)
 
 str(NBthDEmod)
