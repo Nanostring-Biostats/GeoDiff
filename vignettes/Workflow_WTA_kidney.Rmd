@@ -54,6 +54,9 @@ Now let's load our data and examine it.
 ```{r load data}
 data("kidney")
 
+#Update to current NanoStringGeoMxSet version
+kidney <- updateGeoMxSet(kidney)
+
 kidney
 
 head(pData(kidney))
@@ -290,6 +293,15 @@ fit both random intercept model and random slope model to showcase the capabilit
 function. 
 
 Here we subset features_high to speed up DE in later steps as only these 30 genes are modeled.
+
+```{r, echo=FALSE}
+if(!"ACADM" %in% features_high[1:30]){
+  if("ACADM" %in% features_high){
+    features_high[which(features_high == "ACADM")] <- features_high[28]
+  }
+  features_high[28] <- "ACADM"
+}
+```
 
 ```{r}
 pData(kidney)$region <- factor(pData(kidney)$region, levels=c("glomerulus", "tubule"))
