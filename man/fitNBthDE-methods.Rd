@@ -4,6 +4,7 @@
 \name{fitNBthDE}
 \alias{fitNBthDE}
 \alias{fitNBthDE,NanoStringGeoMxSet-method}
+\alias{fitNBthDE,dgCMatrix-method}
 \alias{fitNBthDE,matrix-method}
 \title{Negative Binomial threshold model for differential expression analysis}
 \usage{
@@ -29,7 +30,34 @@ fitNBthDE(object, ...)
   covrob = FALSE,
   preci1con = 1/25,
   cutoff = 10,
-  confac = 1
+  confac = 1,
+  run_parallel = FALSE,
+  n_parallel = 4
+)
+
+\S4method{fitNBthDE}{dgCMatrix}(
+  form,
+  annot,
+  object,
+  probenum,
+  features_high,
+  features_all,
+  sizefact_start,
+  sizefact_BG,
+  threshold_mean,
+  preci2 = 10000,
+  lower_threshold = 0.01,
+  prior_type = c("contrast", "equal"),
+  sizefactrec = TRUE,
+  size_scale = c("sum", "first"),
+  sizescalebythreshold = FALSE,
+  iterations = 2,
+  covrob = FALSE,
+  preci1con = 1/25,
+  cutoff = 10,
+  confac = 1,
+  run_parallel = FALSE,
+  n_parallel = 4L
 )
 
 \S4method{fitNBthDE}{matrix}(
@@ -52,7 +80,9 @@ fitNBthDE(object, ...)
   covrob = FALSE,
   preci1con = 1/25,
   cutoff = 10,
-  confac = 1
+  confac = 1,
+  run_parallel = FALSE,
+  n_parallel = 4L
 )
 }
 \arguments{
@@ -190,6 +220,8 @@ NBthDEmod1 <- fitNBthDE(
     preci1con = 1/25,
     sizescalebythreshold = TRUE
 )
+
+
 
 
 }

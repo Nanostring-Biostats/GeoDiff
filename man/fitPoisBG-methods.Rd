@@ -4,6 +4,7 @@
 \name{fitPoisBG}
 \alias{fitPoisBG}
 \alias{fitPoisBG,NanoStringGeoMxSet-method}
+\alias{fitPoisBG,dgCMatrix-method}
 \alias{fitPoisBG,matrix-method}
 \title{Estimate Poisson background model for either single slide or multiple slides}
 \usage{
@@ -18,7 +19,7 @@ fitPoisBG(object, ...)
   ...
 )
 
-\S4method{fitPoisBG}{matrix}(object, iterations = 10, tol = 0.001, size_scale = c("sum", "first"))
+\S4method{fitPoisBG}{dgCMatrix}(object, iterations = 10, tol = 0.001, size_scale = c("sum", "first"))
 }
 \arguments{
 \item{object}{count matrix with features in rows and samples in columns}
