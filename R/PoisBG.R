@@ -92,11 +92,11 @@ setMethod(
     } else {
       # calling the fitPoisBG_sp function when split is TRUE
       result <- fitPoisBG_sp(
-        object <- countmat,
-        id <- id,
-        iterations <- iterations,
-        tol <- tol,
-        size_scale <- size_scale
+        object = countmat,
+        id = id,
+        iterations = iterations,
+        tol = tol,
+        size_scale = size_scale
       )
       
       # append results to the object
