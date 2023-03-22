@@ -55,3 +55,7 @@ Revisions
 
 * transfer maintainership
 
+# GeoDiff 1.5
+
+* implement code optimizations (mostly RFast and matrix methods) to speed up execution PoisBG.R and ScoreTest.R
+

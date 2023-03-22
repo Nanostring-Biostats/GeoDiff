@@ -15,6 +15,7 @@ Imports:
     plyr,
     lme4,
     Rcpp (>= 1.0.4.6), 
+    Rfast, 
     withr,
     methods,
     graphics,
