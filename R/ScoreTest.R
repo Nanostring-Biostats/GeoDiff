@@ -1,8 +1,3 @@
-library(magrittr)
-library(GeomxTools)
-library(Rcpp)
-library(Rfast)
-library(Matrix)
 #' Testing for features above the background
 #'
 #' Testing for features above the background using Poisson background model as reference
