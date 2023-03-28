@@ -176,8 +176,6 @@ setMethod(
 #' @aliases BGScoreTest,matrix-method
 #' @export
 
-#' @rdname BGScoreTest-methods
-#' @exportMethod 
 setMethod(
   "BGScoreTest", "dgCMatrix",
   function(object, BGmod, adj = 1, probenum, removeoutlier = FALSE, useprior = FALSE) {

@@ -36,5 +36,5 @@ VignetteBuilder: knitr
 Depends: 
     R (>= 4.1.0),
     Biobase
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3
 biocViews: GeneExpression, DifferentialExpression, Normalization
