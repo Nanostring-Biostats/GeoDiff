@@ -15,6 +15,7 @@ Imports:
     plyr,
     lme4,
     Rcpp (>= 1.0.4.6), 
+    Rfast, 
     withr,
     methods,
     graphics,
@@ -35,5 +36,5 @@ VignetteBuilder: knitr
 Depends: 
     R (>= 4.1.0),
     Biobase
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3
 biocViews: GeneExpression, DifferentialExpression, Normalization

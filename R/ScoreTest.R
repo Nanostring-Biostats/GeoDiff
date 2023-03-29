@@ -1,8 +1,3 @@
-library(magrittr)
-library(GeomxTools)
-library(Rcpp)
-library(Rfast)
-library(Matrix)
 #' Testing for features above the background
 #'
 #' Testing for features above the background using Poisson background model as reference
@@ -181,8 +176,6 @@ setMethod(
 #' @aliases BGScoreTest,matrix-method
 #' @export
 
-#' @rdname BGScoreTest-methods
-#' @exportMethod 
 setMethod(
   "BGScoreTest", "dgCMatrix",
   function(object, BGmod, adj = 1, probenum, removeoutlier = FALSE, useprior = FALSE) {
