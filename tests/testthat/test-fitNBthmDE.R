@@ -2,15 +2,15 @@
 ### fitNBthmDE with random intercept effect and random slope effect
 
 test_that("fitNBthmDE produces desired results, CTA", {
-
-
+  
+  
   #### Specs for fitNBthmDE:
   #   1 The function outputs para.
   #     This matrix has features_all in the columns
   #     and parameters(regression coefficients, threshold, r) in the rows.
   #     Both threshold and r are positive.
-
-
+  
+  
   library(Biobase)
   library(dplyr)
   # Preamble/load example data
@@ -20,8 +20,8 @@ test_that("fitNBthmDE produces desired results, CTA", {
   # Change to the temporary directory (will set back to getwd() once block is executed.)
   withr::local_dir(tmp_dir)
   expect_true(inherits(demoData, "NanoStringGeoMxSet"))
-
-
+  
+  
   # susbet samples
   demoData <- demoData[, c(1:5, 33:37)]
   demoData <- fitPoisBG(demoData, size_scale = "sum")
@@ -70,8 +70,8 @@ test_that("fitNBthmDE produces desired results, CTA", {
                           covrob=FALSE,
                           preci1con=1/25,
                           sizescalebythreshold=TRUE)
-
-
+  
+  
   ### Case 1: run random intercept model
   NBthmDEmod1 <- fitNBthmDE(form = ~ group + (1 | `slide name`),
                             split = FALSE,
@@ -85,45 +85,45 @@ test_that("fitNBthmDE produces desired results, CTA", {
                             preci2=10000,
                             sizescale = TRUE,
                             controlRandom=list(nu=12, nmh_e=400, thin_e=60))
-
+  
   # 1: The function outputs para...
   expect_true("para" %in% names(NBthmDEmod1))
-
+  
   # This matrix has features_all in the columns
   expect_true(all(features_all[1:5] == colnames(NBthmDEmod1$para)))
-
+  
   # and parameters(regression coefficients, threshold, r) in the rows.
   expect_true(all(c("(Intercept)", "group", "r", "threshold") %in% rownames(NBthmDEmod1$para)))
-
+  
   # Both threshold and r are positive.
   expect_true(all(NBthmDEmod1$para["threshold",] > 0))
   expect_true(all(NBthmDEmod1$para["r",] > 0))
-
-
-
+  
+  
+  
   ### Case 2: run random slope model
   NBthmDEmod1slope <- fitNBthmDE(form = ~ group + (1 + group | `slide name`),
-                            split = FALSE,
-                            object = demoData,
-                            ROIs_high = ROIs_high,
-                            features_all = features_all[1:5],
-                            sizefact = demoData[, ROIs_high][["sizefact_fitNBth"]],
-                            sizefact_BG = demoData[, ROIs_high][["sizefact"]],
-                            preci1=NBthDEmod2$preci1,
-                            threshold_mean = thmean,
-                            preci2=10000,
-                            sizescale = TRUE,
-                            controlRandom=list(nu=12, nmh_e=400, thin_e=60))
-
+                                 split = FALSE,
+                                 object = demoData,
+                                 ROIs_high = ROIs_high,
+                                 features_all = features_all[1:5],
+                                 sizefact = demoData[, ROIs_high][["sizefact_fitNBth"]],
+                                 sizefact_BG = demoData[, ROIs_high][["sizefact"]],
+                                 preci1=NBthDEmod2$preci1,
+                                 threshold_mean = thmean,
+                                 preci2=10000,
+                                 sizescale = TRUE,
+                                 controlRandom=list(nu=12, nmh_e=400, thin_e=60))
+  
   # 1: The function outputs para...
   expect_true("para" %in% names(NBthmDEmod1slope))
-
+  
   # This matrix has features_all in the columns
   expect_true(all(features_all[1:5] == colnames(NBthmDEmod1slope$para)))
-
+  
   # and parameters(regression coefficients, threshold, r) in the rows.
   expect_true(all(c("(Intercept)", "group", "r", "threshold") %in% rownames(NBthmDEmod1slope$para)))
-
+  
   # Both threshold and r are positive.
   expect_true(all(NBthmDEmod1slope$para["threshold",] > 0))
   expect_true(all(NBthmDEmod1slope$para["r",] > 0))
@@ -134,10 +134,10 @@ test_that("fitNBthmDE produces desired results, CTA", {
 
 
 test_that("fitNBthmDE produces desired results, WTA", {
-
-
+  
+  
   ### Same overall workflow as above but with the WTA kidney dataset
-
+  
   library(dplyr)
   ### Initializing WTA objects before running tests
   # Create temporary directory that will get destroyed after this block is executed.
@@ -153,13 +153,13 @@ test_that("fitNBthmDE produces desired results, WTA", {
   rownames(fData(kidney))[which(!fData(kidney)$Negative)] <- fData(kidney)[which(!fData(kidney)$Negative), "TargetName"]
   featureNames(kidney) <- rownames(fData(kidney))
   rownames(exprs(kidney)) <- rownames(fData(kidney))
-
+  
   kidney <- fitPoisBG(kidney, size_scale = "sum")
   kidney <- fitPoisBG(kidney, groupvar = "slide name", size_scale = "sum")
   all0probeidx <- which(rowSums(exprs(kidney))==0)
   kidney <- kidney[-all0probeidx, ]
   kidney <- aggreprobe(kidney, use = "cor")
-
+  
   # Negative Binomial threshold model
   set.seed(123)
   kidney <- fitNBth(kidney,
@@ -196,8 +196,8 @@ test_that("fitNBthmDE produces desired results, WTA", {
                           covrob=FALSE,
                           preci1con=1/25,
                           sizescalebythreshold=TRUE)
-
-
+  
+  
   ### Case 1: run examplar function from vignette and check each specification
   # random intercept model
   NBthmDEmod2 <- fitNBthmDE(object = kidney,
@@ -212,22 +212,22 @@ test_that("fitNBthmDE produces desired results, WTA", {
                             preci2=10000,
                             sizescale = TRUE,
                             controlRandom=list(nu=12, nmh_e=400, thin_e=60))
-
+  
   # 1: The function outputs para...
   expect_true("para" %in% names(NBthmDEmod2))
-
+  
   # This matrix has features_all in the columns
   expect_true(all(features_high[1:5] == colnames(NBthmDEmod2$para)))
-
+  
   # and parameters(regression coefficients, threshold, r) in the rows.
   expect_true(all(c("(Intercept)", "regiontubule", "r", "threshold") %in% rownames(NBthmDEmod2$para)))
-
+  
   # Both threshold and r are positive.
   expect_true(all(NBthmDEmod2$para["threshold",] > 0))
   expect_true(all(NBthmDEmod2$para["r",] > 0))
-
-
-
+  
+  
+  
   ### Case 2: run examplar function from vignette and check each specification
   # random slope model
   NBthmDEmod2slope <- fitNBthmDE(object = kidney,
@@ -244,13 +244,13 @@ test_that("fitNBthmDE produces desired results, WTA", {
                                  controlRandom=list(nu=12, nmh_e=400, thin_e=60))
   # 1: The function outputs para...
   expect_true("para" %in% names(NBthmDEmod2slope))
-
+  
   # This matrix has features_all in the columns
   expect_true(all(features_high[1:5] == colnames(NBthmDEmod2slope$para)))
-
+  
   # and parameters(regression coefficients, threshold, r) in the rows.
   expect_true(all(c("(Intercept)", "regiontubule", "r", "threshold") %in% rownames(NBthmDEmod2slope$para)))
-
+  
   # Both threshold and r are positive.
   expect_true(all(NBthmDEmod2slope$para["threshold",] > 0))
   expect_true(all(NBthmDEmod2slope$para["r",] > 0))
