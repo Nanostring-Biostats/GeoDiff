@@ -2,7 +2,7 @@ Package: GeoDiff
 Type: Package
 Title: Count model based differential expression and normalization on GeoMx RNA data
 Version: 1.1.3
-Authors@R: c(person("Nicole", "Ortogero", email = "nortogero@nanostring.com", role = c("cre")),
+Authors@R: c(person("Maddy", "Griswold", email = "mgriswold@nanostring.com", role = c("cre")),
              person("Lei", "Yang", role = c("aut")), 
              person("Zhi", "Yang", role = c("aut")))
 Description: A series of statistical models using count generating distributions 
